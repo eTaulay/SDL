@@ -12,9 +12,12 @@
 
 /* Print out all the scancodes we have, just to verify them */
 
+#include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 
 int
 main(int argc, char *argv[])
@@ -33,7 +36,5 @@ main(int argc, char *argv[])
                SDL_GetScancodeName(scancode));
     }
     SDL_Quit();
-    return 0;
+    return (0);
 }
-
-/* vi: set ts=4 sw=4 expandtab: */

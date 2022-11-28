@@ -22,6 +22,11 @@
 
 #if SDL_VIDEO_DRIVER_WINDOWS
 
+#include "SDL_main.h"
+#include "SDL_video.h"
+#include "SDL_hints.h"
+#include "SDL_mouse.h"
+#include "SDL_system.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 
@@ -188,7 +193,9 @@ WIN_CreateDevice(void)
     device->SetWindowAlwaysOnTop = WIN_SetWindowAlwaysOnTop;
     device->SetWindowFullscreen = WIN_SetWindowFullscreen;
 #if !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
+    device->SetWindowGammaRamp = WIN_SetWindowGammaRamp;
     device->GetWindowICCProfile = WIN_GetWindowICCProfile;
+    device->GetWindowGammaRamp = WIN_GetWindowGammaRamp;
     device->SetWindowMouseRect = WIN_SetWindowMouseRect;
     device->SetWindowMouseGrab = WIN_SetWindowMouseGrab;
     device->SetWindowKeyboardGrab = WIN_SetWindowKeyboardGrab;
@@ -219,26 +226,17 @@ WIN_CreateDevice(void)
     device->GL_GetSwapInterval = WIN_GL_GetSwapInterval;
     device->GL_SwapWindow = WIN_GL_SwapWindow;
     device->GL_DeleteContext = WIN_GL_DeleteContext;
-    device->GL_GetEGLSurface = NULL;
-#endif
-#if SDL_VIDEO_OPENGL_EGL
-#if SDL_VIDEO_OPENGL_WGL
-    if (SDL_GetHintBoolean(SDL_HINT_VIDEO_FORCE_EGL, SDL_FALSE)) {
-#endif
-        /* Use EGL based functions */
-        device->GL_LoadLibrary = WIN_GLES_LoadLibrary;
-        device->GL_GetProcAddress = WIN_GLES_GetProcAddress;
-        device->GL_UnloadLibrary = WIN_GLES_UnloadLibrary;
-        device->GL_CreateContext = WIN_GLES_CreateContext;
-        device->GL_MakeCurrent = WIN_GLES_MakeCurrent;
-        device->GL_SetSwapInterval = WIN_GLES_SetSwapInterval;
-        device->GL_GetSwapInterval = WIN_GLES_GetSwapInterval;
-        device->GL_SwapWindow = WIN_GLES_SwapWindow;
-        device->GL_DeleteContext = WIN_GLES_DeleteContext;
-        device->GL_GetEGLSurface = WIN_GLES_GetEGLSurface;
-#if SDL_VIDEO_OPENGL_WGL
-    }
-#endif
+#elif SDL_VIDEO_OPENGL_EGL
+    /* Use EGL based functions */
+    device->GL_LoadLibrary = WIN_GLES_LoadLibrary;
+    device->GL_GetProcAddress = WIN_GLES_GetProcAddress;
+    device->GL_UnloadLibrary = WIN_GLES_UnloadLibrary;
+    device->GL_CreateContext = WIN_GLES_CreateContext;
+    device->GL_MakeCurrent = WIN_GLES_MakeCurrent;
+    device->GL_SetSwapInterval = WIN_GLES_SetSwapInterval;
+    device->GL_GetSwapInterval = WIN_GLES_GetSwapInterval;
+    device->GL_SwapWindow = WIN_GLES_SwapWindow;
+    device->GL_DeleteContext = WIN_GLES_DeleteContext;
 #endif
 #if SDL_VIDEO_VULKAN
     device->Vulkan_LoadLibrary = WIN_Vulkan_LoadLibrary;
@@ -554,7 +552,7 @@ SDL_Direct3D9GetAdapterIndex(int displayIndex)
         SDL_DisplayData *pData = (SDL_DisplayData *)SDL_GetDisplayDriverData(displayIndex);
         int adapterIndex = D3DADAPTER_DEFAULT;
 
-        if (pData == NULL) {
+        if (!pData) {
             SDL_SetError("Invalid display index");
             adapterIndex = -1; /* make sure we return something invalid */
         } else {
@@ -622,12 +620,8 @@ SDL_bool
 SDL_DXGIGetOutputInfo(int displayIndex, int *adapterIndex, int *outputIndex)
 {
 #if !HAVE_DXGI_H
-    if (adapterIndex) {
-        *adapterIndex = -1;
-    }
-    if (outputIndex) {
-        *outputIndex = -1;
-    }
+    if (adapterIndex) *adapterIndex = -1;
+    if (outputIndex) *outputIndex = -1;
     SDL_SetError("SDL was compiled without DXGI support due to missing dxgi.h header");
     return SDL_FALSE;
 #else
@@ -639,12 +633,12 @@ SDL_DXGIGetOutputInfo(int displayIndex, int *adapterIndex, int *outputIndex)
     IDXGIAdapter *pDXGIAdapter;
     IDXGIOutput* pDXGIOutput;
 
-    if (adapterIndex == NULL) {
+    if (!adapterIndex) {
         SDL_InvalidParamError("adapterIndex");
         return SDL_FALSE;
     }
 
-    if (outputIndex == NULL) {
+    if (!outputIndex) {
         SDL_InvalidParamError("outputIndex");
         return SDL_FALSE;
     }
@@ -652,7 +646,7 @@ SDL_DXGIGetOutputInfo(int displayIndex, int *adapterIndex, int *outputIndex)
     *adapterIndex = -1;
     *outputIndex = -1;
 
-    if (pData == NULL) {
+    if (!pData) {
         SDL_SetError("Invalid display index");
         return SDL_FALSE;
     }

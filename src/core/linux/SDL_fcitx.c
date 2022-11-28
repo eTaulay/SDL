@@ -23,15 +23,15 @@
 #include <unistd.h>
 
 #include "SDL_fcitx.h"
+#include "SDL_keycode.h"
+#include "SDL_keyboard.h"
 #include "../../events/SDL_keyboard_c.h"
 #include "SDL_dbus.h"
-
-#ifdef SDL_VIDEO_DRIVER_X11
-#include "../../video/x11/SDL_x11video.h"
-#define SDL_ENABLE_SYSWM_X11
+#include "SDL_syswm.h"
+#if SDL_VIDEO_DRIVER_X11
+#  include "../../video/x11/SDL_x11video.h"
 #endif
-#include <SDL3/SDL_syswm.h>
-
+#include "SDL_hints.h"
 
 #define FCITX_DBUS_SERVICE "org.freedesktop.portal.Fcitx"
 
@@ -347,30 +347,14 @@ Fcitx_ModState(void)
     Uint32 fcitx_mods = 0;
     SDL_Keymod sdl_mods = SDL_GetModState();
 
-    if (sdl_mods & KMOD_SHIFT) {
-        fcitx_mods |= (1 << 0);
-    }
-    if (sdl_mods & KMOD_CAPS) {
-        fcitx_mods |= (1 << 1);
-    }
-    if (sdl_mods & KMOD_CTRL) {
-        fcitx_mods |= (1 << 2);
-    }
-    if (sdl_mods & KMOD_ALT) {
-        fcitx_mods |= (1 << 3);
-    }
-    if (sdl_mods & KMOD_NUM) {
-        fcitx_mods |= (1 << 4);
-    }
-    if (sdl_mods & KMOD_MODE) {
-        fcitx_mods |= (1 << 7);
-    }
-    if (sdl_mods & KMOD_LGUI) {
-        fcitx_mods |= (1 << 6);
-    }
-    if (sdl_mods & KMOD_RGUI) {
-        fcitx_mods |= (1 << 28);
-    }
+    if (sdl_mods & KMOD_SHIFT) fcitx_mods |= (1 << 0);
+    if (sdl_mods & KMOD_CAPS)   fcitx_mods |= (1 << 1);
+    if (sdl_mods & KMOD_CTRL)  fcitx_mods |= (1 << 2);
+    if (sdl_mods & KMOD_ALT)   fcitx_mods |= (1 << 3);
+    if (sdl_mods & KMOD_NUM)    fcitx_mods |= (1 << 4);
+    if (sdl_mods & KMOD_MODE)   fcitx_mods |= (1 << 7);
+    if (sdl_mods & KMOD_LGUI)   fcitx_mods |= (1 << 6);
+    if (sdl_mods & KMOD_RGUI)   fcitx_mods |= (1 << 28);
 
     return fcitx_mods;
 }
@@ -452,23 +436,28 @@ SDL_Fcitx_UpdateTextRect(const SDL_Rect *rect)
     }
 
     focused_win = SDL_GetKeyboardFocus();
-    if (focused_win == NULL) {
+    if (!focused_win) {
         return ;
+    }
+
+    SDL_VERSION(&info.version);
+    if (!SDL_GetWindowWMInfo(focused_win, &info)) {
+        return;
     }
 
     SDL_GetWindowPosition(focused_win, &x, &y);
 
-    if (SDL_GetWindowWMInfo(focused_win, &info, SDL_SYSWM_CURRENT_VERSION) == 0) {
-#ifdef SDL_ENABLE_SYSWM_X11
-        if (info.subsystem == SDL_SYSWM_X11) {
-            Display *x_disp = info.info.x11.display;
-            int x_screen = info.info.x11.screen;
-            Window x_win = info.info.x11.window;
-            Window unused;
-            X11_XTranslateCoordinates(x_disp, x_win, RootWindow(x_disp, x_screen), 0, 0, &x, &y, &unused);
-        }
-#endif
+#if SDL_VIDEO_DRIVER_X11
+    if (info.subsystem == SDL_SYSWM_X11) {
+        SDL_DisplayData *displaydata = (SDL_DisplayData *) SDL_GetDisplayForWindow(focused_win)->driverdata;
+
+        Display *x_disp = info.info.x11.display;
+        Window x_win = info.info.x11.window;
+        int x_screen = displaydata->screen;
+        Window unused;
+        X11_XTranslateCoordinates(x_disp, x_win, RootWindow(x_disp, x_screen), 0, 0, &x, &y, &unused);
     }
+#endif
 
     if (cursor->x == -1 && cursor->y == -1 && cursor->w == 0 && cursor->h == 0) {
         /* move to bottom left */

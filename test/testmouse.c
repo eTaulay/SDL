@@ -10,7 +10,7 @@
   freely.
 */
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
@@ -18,7 +18,7 @@
 
 #include <stdlib.h> /* exit() */
 
-#ifdef __IOS__
+#ifdef __IPHONEOS__
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   480
 #else
@@ -133,16 +133,15 @@ loop(void *arg)
                 break;
 
         case SDL_MOUSEMOTION:
-            if (active == NULL) {
+            if (!active)
                 break;
-            }
 
             active->x2 = event.motion.x;
             active->y2 = event.motion.y;
             break;
 
         case SDL_MOUSEBUTTONDOWN:
-            if (active == NULL) {
+            if (!active) {
                 active = SDL_calloc(1, sizeof(*active));
                 active->x1 = active->x2 = event.button.x;
                 active->y1 = active->y2 = event.button.y;
@@ -159,9 +158,8 @@ loop(void *arg)
             break;
 
         case SDL_MOUSEBUTTONUP:
-            if (active == NULL) {
+            if (!active)
                 break;
-            }
 
             switch (event.button.button) {
             case SDL_BUTTON_LEFT:   buttons &= ~SDL_BUTTON_LMASK; break;
@@ -212,9 +210,8 @@ loop(void *arg)
 
     /* Objects from mouse clicks */
     DrawObjects(renderer);
-    if (active) {
+    if (active)
         DrawObject(renderer, active);
-    }
 
     SDL_RenderPresent(renderer);
 

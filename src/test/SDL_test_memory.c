@@ -18,7 +18,12 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-#include <SDL3/SDL_test.h>
+#include "SDL_config.h"
+#include "SDL_assert.h"
+#include "SDL_stdinc.h"
+#include "SDL_log.h"
+#include "SDL_test_crc32.h"
+#include "SDL_test_memory.h"
 
 #ifdef HAVE_LIBUNWIND_H
 #define UNW_LOCAL_ONLY
@@ -79,7 +84,7 @@ static void SDL_TrackAllocation(void *mem, size_t size)
         return;
     }
     entry = (SDL_tracked_allocation *)SDL_malloc_orig(sizeof(*entry));
-    if (entry == NULL) {
+    if (!entry) {
         return;
     }
     entry->mem = mem;
@@ -166,7 +171,7 @@ static void * SDLCALL SDLTest_TrackedRealloc(void *ptr, size_t size)
 {
     void *mem;
 
-    SDL_assert(ptr == NULL || SDL_IsAllocationTracked(ptr));
+    SDL_assert(!ptr || SDL_IsAllocationTracked(ptr));
     mem = SDL_realloc_orig(ptr, size);
     if (mem && mem != ptr) {
         if (ptr) {
@@ -179,7 +184,7 @@ static void * SDLCALL SDLTest_TrackedRealloc(void *ptr, size_t size)
 
 static void SDLCALL SDLTest_TrackedFree(void *ptr)
 {
-    if (ptr == NULL) {
+    if (!ptr) {
         return;
     }
 

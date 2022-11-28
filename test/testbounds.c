@@ -10,7 +10,7 @@
   freely.
 */
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 
 int main(int argc, char **argv)
 {
@@ -37,3 +37,4 @@ int main(int argc, char **argv)
 }
 
 /* vi: set ts=4 sw=4 expandtab: */
+

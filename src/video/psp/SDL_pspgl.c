@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "SDL_error.h"
 #include "SDL_pspvideo.h"
 #include "SDL_pspgl_c.h"
 
@@ -102,11 +103,13 @@ PSP_GL_CreateContext(_THIS, SDL_Window * window)
         attribs[i++] = EGL_DEPTH_SIZE;
         attribs[i++] = _this->gl_config.depth_size;
 
-        if (_this->gl_config.alpha_size) {
+        if (_this->gl_config.alpha_size)
+        {
             attribs[i++] = EGL_ALPHA_SIZE;
             attribs[i++] = _this->gl_config.alpha_size;
         }
-        if (_this->gl_config.stencil_size) {
+        if (_this->gl_config.stencil_size)
+        {
             attribs[i++] = EGL_STENCIL_SIZE;
             attribs[i++] = _this->gl_config.stencil_size;
         }
@@ -115,7 +118,8 @@ PSP_GL_CreateContext(_THIS, SDL_Window * window)
 
         EGLCHK(eglChooseConfig(display, attribs, &config, 1, &num_configs));
 
-        if (num_configs == 0) {
+        if (num_configs == 0)
+        {
             SDL_SetError("No valid EGL configs for requested mode");
             return 0;
         }

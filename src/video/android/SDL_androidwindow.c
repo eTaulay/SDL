@@ -22,6 +22,7 @@
 
 #if SDL_VIDEO_DRIVER_ANDROID
 
+#include "SDL_syswm.h"
 #include "../SDL_sysvideo.h"
 #include "../../events/SDL_keyboard_c.h"
 #include "../../events/SDL_mouse_c.h"
@@ -30,9 +31,7 @@
 
 #include "SDL_androidvideo.h"
 #include "SDL_androidwindow.h"
-
-#define SDL_ENABLE_SYSWM_ANDROID
-#include <SDL3/SDL_syswm.h>
+#include "SDL_hints.h"
 
 /* Currently only one window */
 SDL_Window *Android_Window = NULL;
@@ -67,7 +66,7 @@ Android_CreateWindow(_THIS, SDL_Window * window)
     SDL_SetKeyboardFocus(window);
 
     data = (SDL_WindowData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         retval = SDL_OutOfMemory();
         goto endfunction;
     }
@@ -136,7 +135,7 @@ Android_SetWindowFullscreen(_THIS, SDL_Window *window, SDL_VideoDisplay *display
         }
 
         data = (SDL_WindowData *)window->driverdata;
-        if (data == NULL || !data->native_window) {
+        if (!data || !data->native_window) {
             if (data && !data->native_window) {
                 SDL_SetError("Missing native window");
             }
@@ -203,19 +202,25 @@ Android_DestroyWindow(_THIS, SDL_Window *window)
     SDL_UnlockMutex(Android_ActivityMutex);
 }
 
-int
+SDL_bool
 Android_GetWindowWMInfo(_THIS, SDL_Window *window, SDL_SysWMinfo *info)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
 
-    info->subsystem = SDL_SYSWM_ANDROID;
-    info->info.android.window = data->native_window;
+    if (info->version.major == SDL_MAJOR_VERSION) {
+        info->subsystem = SDL_SYSWM_ANDROID;
+        info->info.android.window = data->native_window;
 
 #if SDL_VIDEO_OPENGL_EGL
-    info->info.android.surface = data->egl_surface;
+        info->info.android.surface = data->egl_surface;
 #endif
 
-    return 0;
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Application not compiled with SDL %d",
+                     SDL_MAJOR_VERSION);
+        return SDL_FALSE;
+    }
 }
 
 #endif /* SDL_VIDEO_DRIVER_ANDROID */

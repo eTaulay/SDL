@@ -9,7 +9,7 @@
   including commercial applications, and to alter it and redistribute it
   freely.
 */
-#include <SDL3/SDL.h>
+#include "SDL.h"
 
 static void tryOpenURL(const char *url)
 {

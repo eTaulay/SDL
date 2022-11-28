@@ -20,9 +20,12 @@
 */
 
 #include "../../SDL_internal.h"
+#include "SDL_hints.h"
 
 #if SDL_AUDIO_DRIVER_PIPEWIRE
 
+#include "SDL_audio.h"
+#include "SDL_loadso.h"
 #include "SDL_pipewire.h"
 
 #include <pipewire/extensions/metadata.h>
@@ -1062,7 +1065,7 @@ input_callback(void *data)
     }
 
     pw_buf = PIPEWIRE_pw_stream_dequeue_buffer(stream);
-    if (pw_buf == NULL) {
+    if (!pw_buf) {
         return;
     }
 
@@ -1186,15 +1189,15 @@ PIPEWIRE_OpenDevice(_THIS, const char *devname)
 
     /* Get the hints for the application name, stream name and role */
     app_name = SDL_GetHint(SDL_HINT_AUDIO_DEVICE_APP_NAME);
-    if (app_name == NULL || *app_name == '\0') {
+    if (!app_name || *app_name == '\0') {
         app_name = SDL_GetHint(SDL_HINT_APP_NAME);
-        if (app_name == NULL || *app_name == '\0') {
+        if (!app_name || *app_name == '\0') {
             app_name = "SDL Application";
         }
     }
 
     stream_name = SDL_GetHint(SDL_HINT_AUDIO_DEVICE_STREAM_NAME);
-    if (stream_name == NULL || *stream_name == '\0') {
+    if (!stream_name || *stream_name == '\0') {
         stream_name = "Audio Stream";
     }
 
@@ -1203,7 +1206,7 @@ PIPEWIRE_OpenDevice(_THIS, const char *devname)
      * but 'Game' seems more appropriate for the majority of SDL applications.
      */
     stream_role = SDL_GetHint(SDL_HINT_AUDIO_DEVICE_STREAM_ROLE);
-    if (stream_role == NULL || *stream_role == '\0') {
+    if (!stream_role || *stream_role == '\0') {
         stream_role = "Game";
     }
 

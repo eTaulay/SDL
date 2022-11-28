@@ -20,6 +20,8 @@
 */
 #include "../SDL_internal.h"
 
+#include "../../include/SDL_scancode.h"
+
 typedef enum
 {
     SDL_SCANCODE_TABLE_DARWIN,

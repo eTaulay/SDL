@@ -13,13 +13,14 @@
 /* Simple program:  draw as many random objects on the screen as possible */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL_test_common.h>
+#include "SDL_test_common.h"
 
 #define NUM_OBJECTS 100
 
@@ -189,9 +190,8 @@ loop()
     }
     for (i = 0; i < state->num_windows; ++i) {
         SDL_Renderer *renderer = state->renderers[i];
-        if (state->windows[i] == NULL) {
+        if (state->windows[i] == NULL)
             continue;
-        }
         SDL_SetRenderDrawColor(renderer, 0xA0, 0xA0, 0xA0, 0xFF);
         SDL_RenderClear(renderer);
 
@@ -232,7 +232,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
     for (i = 1; i < argc;) {

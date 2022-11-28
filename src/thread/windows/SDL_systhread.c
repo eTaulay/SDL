@@ -24,6 +24,8 @@
 
 /* Win32 thread management routines for SDL */
 
+#include "SDL_hints.h"
+#include "SDL_thread.h"
 #include "../SDL_thread_c.h"
 #include "../SDL_systhread.h"
 #include "SDL_systhread_c.h"
@@ -42,6 +44,23 @@ typedef unsigned long (__cdecl *pfnSDL_CurrentBeginThread) (void *, unsigned,
         unsigned (__stdcall *func)(void *), void *arg,
         unsigned, unsigned *threadID);
 typedef void (__cdecl *pfnSDL_CurrentEndThread)(unsigned code);
+
+#elif defined(__WATCOMC__)
+/* This is for Watcom targets except OS2 */
+#if __WATCOMC__ < 1240
+#define __watcall
+#endif
+typedef unsigned long (__watcall * pfnSDL_CurrentBeginThread) (void *,
+                                                               unsigned,
+                                                               unsigned
+                                                               (__stdcall *
+                                                                func) (void
+                                                                       *),
+                                                               void *arg,
+                                                               unsigned,
+                                                               unsigned
+                                                               *threadID);
+typedef void (__watcall * pfnSDL_CurrentEndThread) (unsigned code);
 
 #else
 typedef uintptr_t(__cdecl * pfnSDL_CurrentBeginThread) (void *, unsigned,
@@ -76,7 +95,7 @@ RunThreadViaCreateThread(LPVOID data)
 static unsigned __stdcall
 RunThreadViaBeginThreadEx(void *data)
 {
-  return (unsigned)RunThread(data);
+  return (unsigned) RunThread(data);
 }
 
 #ifdef SDL_PASSED_BEGINTHREAD_ENDTHREAD
@@ -187,7 +206,7 @@ SDL_SYS_SetupThread(const char *name)
 SDL_threadID
 SDL_ThreadID(void)
 {
-    return (SDL_threadID)GetCurrentThreadId();
+    return ((SDL_threadID) GetCurrentThreadId());
 }
 
 int

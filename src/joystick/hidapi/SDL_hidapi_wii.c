@@ -22,6 +22,11 @@
 
 #ifdef SDL_JOYSTICK_HIDAPI
 
+#include "SDL_hints.h"
+#include "SDL_events.h"
+#include "SDL_timer.h"
+#include "SDL_joystick.h"
+#include "SDL_gamecontroller.h"
 #include "../../SDL_hints_c.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
@@ -211,13 +216,13 @@ static SDL_bool WriteOutput(SDL_DriverWii_Context *ctx, const Uint8 *data, int s
     }
 #endif
     if (sync) {
-        return SDL_hid_write(ctx->device->dev, data, size) >= 0;
+        return (SDL_hid_write(ctx->device->dev, data, size) >= 0);
     } else {
         /* Use the rumble thread for general asynchronous writes */
         if (SDL_HIDAPI_LockRumble() < 0) {
             return SDL_FALSE;
         }
-        return SDL_HIDAPI_SendRumbleAndUnlock(ctx->device, data, size) >= 0;
+        return (SDL_HIDAPI_SendRumbleAndUnlock(ctx->device, data, size) >= 0);
     }
 }
 
@@ -229,7 +234,7 @@ static SDL_bool ReadInputSync(SDL_DriverWii_Context *ctx, EWiiInputReportIDs exp
     int nRead = 0;
     while ((nRead = ReadInput(ctx)) != -1) {
         if (nRead > 0) {
-            if (ctx->m_rgucReadBuffer[0] == expectedID && (isMine == NULL || isMine(ctx->m_rgucReadBuffer))) {
+            if (ctx->m_rgucReadBuffer[0] == expectedID && (!isMine || isMine(ctx->m_rgucReadBuffer))) {
                 return SDL_TRUE;
             }
         } else {
@@ -729,7 +734,7 @@ HIDAPI_DriverWii_InitDevice(SDL_HIDAPI_Device *device)
     SDL_DriverWii_Context *ctx;
 
     ctx = (SDL_DriverWii_Context *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
@@ -1187,9 +1192,9 @@ static void HandleMotionPlusData(SDL_DriverWii_Context *ctx, SDL_Joystick *joyst
             z *= 2000;
         }
 
-        values[0] = -((float)z / GYRO_RES_PER_DEGREE) * SDL_PI_F / 180.0f;
-        values[1] = ((float)x / GYRO_RES_PER_DEGREE) * SDL_PI_F / 180.0f;
-        values[2] = ((float)y / GYRO_RES_PER_DEGREE) * SDL_PI_F / 180.0f;
+        values[0] = -((float)z / GYRO_RES_PER_DEGREE) * (float)M_PI / 180.0f;
+        values[1] = ((float)x / GYRO_RES_PER_DEGREE) * (float)M_PI / 180.0f;
+        values[2] = ((float)y / GYRO_RES_PER_DEGREE) * (float)M_PI / 180.0f;
         SDL_PrivateJoystickSensor(joystick, SDL_SENSOR_GYRO, 0, values, 3);
     }
 }
@@ -1524,7 +1529,7 @@ HIDAPI_DriverWii_UpdateDevice(SDL_HIDAPI_Device *device)
         /* Read error, device is disconnected */
         HIDAPI_JoystickDisconnected(device, device->joysticks[0]);
     }
-    return size >= 0;
+    return (size >= 0);
 }
 
 static void

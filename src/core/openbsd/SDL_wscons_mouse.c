@@ -20,6 +20,7 @@
 */
 
 #include "../../SDL_internal.h"
+#include "SDL_events.h"
 #include <sys/time.h>
 #include <dev/wscons/wsconsio.h>
 #include <unistd.h>
@@ -41,9 +42,7 @@ SDL_WSCONS_mouse_input_data* SDL_WSCONS_Init_Mouse()
 #endif
     SDL_WSCONS_mouse_input_data* mouseInputData = SDL_calloc(1, sizeof(SDL_WSCONS_mouse_input_data));
 
-    if (mouseInputData == NULL) {
-        return NULL;
-    }
+    if (!mouseInputData) return NULL;
     mouseInputData->fd = open("/dev/wsmouse",O_RDWR | O_NONBLOCK | O_CLOEXEC);
     if (mouseInputData->fd == -1) {free(mouseInputData); return NULL; }
 #ifdef WSMOUSEIO_SETMODE
@@ -62,9 +61,11 @@ void updateMouse(SDL_WSCONS_mouse_input_data* inputData)
     int n,i;
     SDL_Mouse* mouse = SDL_GetMouse();
 
-    if ((n = read(inputData->fd, events, sizeof(events))) > 0) {
+    if ((n = read(inputData->fd, events, sizeof(events))) > 0)
+    {
         n /= sizeof(struct wscons_event);
-        for (i = 0; i < n; i++) {
+        for (i = 0; i < n; i++)
+        {
             type = events[i].type;
             switch(type)
             {
@@ -127,9 +128,7 @@ void updateMouse(SDL_WSCONS_mouse_input_data* inputData)
 
 void SDL_WSCONS_Quit_Mouse(SDL_WSCONS_mouse_input_data* inputData)
 {
-    if (inputData == NULL) {
-        return;
-    }
+    if (!inputData) return;
     close(inputData->fd);
     free(inputData);
 }

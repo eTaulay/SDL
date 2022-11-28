@@ -24,6 +24,9 @@
 #include "../core/windows/SDL_windows.h"
 #endif
 
+#include "SDL_atomic.h"
+#include "SDL_mutex.h"
+#include "SDL_timer.h"
 
 #if !defined(HAVE_GCC_ATOMICS) && defined(__SOLARIS__)
 #include <atomic.h>
@@ -41,7 +44,7 @@
 #include <kernel.h>
 #endif
 
-#if !defined(HAVE_GCC_ATOMICS) && defined(__MACOS__)
+#if !defined(HAVE_GCC_ATOMICS) && defined(__MACOSX__)
 #include <libkern/OSAtomic.h>
 #endif
 
@@ -63,7 +66,7 @@ SDL_AtomicTryLock(SDL_SpinLock *lock)
     /* Terrible terrible damage */
     static SDL_mutex *_spinlock_mutex;
 
-    if (_spinlock_mutex == NULL) {
+    if (!_spinlock_mutex) {
         /* Race condition on first lock... */
         _spinlock_mutex = SDL_CreateMutex();
     }
@@ -78,14 +81,14 @@ SDL_AtomicTryLock(SDL_SpinLock *lock)
     }
 
 #elif HAVE_GCC_ATOMICS || HAVE_GCC_SYNC_LOCK_TEST_AND_SET
-    return __sync_lock_test_and_set(lock, 1) == 0;
+    return (__sync_lock_test_and_set(lock, 1) == 0);
 
 #elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64))
-    return _InterlockedExchange_acq(lock, 1) == 0;
+    return (_InterlockedExchange_acq(lock, 1) == 0);
 
 #elif defined(_MSC_VER)
     SDL_COMPILE_TIME_ASSERT(locksize, sizeof(*lock) == sizeof(long));
-    return InterlockedExchange((long *)lock, 1) == 0;
+    return (InterlockedExchange((long*)lock, 1) == 0);
 
 #elif defined(__WATCOMC__) && defined(__386__)
     return _SDL_xchg_watcom(lock, 1) == 0;
@@ -102,40 +105,40 @@ SDL_AtomicTryLock(SDL_SpinLock *lock)
         __asm__ __volatile__ (
             "ldrex %0, [%2]\nteq   %0, #0\nstrexeq %0, %1, [%2]"
             : "=&r" (result) : "r" (1), "r" (lock) : "cc", "memory");
-        return result == 0;
+        return (result == 0);
     }
 #endif
 
     __asm__ __volatile__ (
         "swp %0, %1, [%2]\n"
         : "=&r,&r" (result) : "r,0" (1), "r,r" (lock) : "memory");
-    return result == 0;
+    return (result == 0);
 
 #elif defined(__GNUC__) && defined(__arm__)
     int result;
     __asm__ __volatile__ (
         "ldrex %0, [%2]\nteq   %0, #0\nstrexeq %0, %1, [%2]"
         : "=&r" (result) : "r" (1), "r" (lock) : "cc", "memory");
-    return result == 0;
+    return (result == 0);
 
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
     int result;
     __asm__ __volatile__(
         "lock ; xchgl %0, (%1)\n"
         : "=r" (result) : "r" (lock), "0" (1) : "cc", "memory");
-    return result == 0;
+    return (result == 0);
 
-#elif defined(__MACOS__) || defined(__IOS__) || defined(__TVOS__)
+#elif defined(__MACOSX__) || defined(__IPHONEOS__)
     /* Maybe used for PowerPC, but the Intel asm or gcc atomics are favored. */
     return OSAtomicCompareAndSwap32Barrier(0, 1, lock);
 
 #elif defined(__SOLARIS__) && defined(_LP64)
     /* Used for Solaris with non-gcc compilers. */
-    return (SDL_bool)((int)atomic_cas_64((volatile uint64_t *)lock, 0, 1) == 0);
+    return (SDL_bool) ((int) atomic_cas_64((volatile uint64_t*)lock, 0, 1) == 0);
 
 #elif defined(__SOLARIS__) && !defined(_LP64)
     /* Used for Solaris with non-gcc compilers. */
-    return (SDL_bool)((int)atomic_cas_32((volatile uint32_t *)lock, 0, 1) == 0);
+    return (SDL_bool) ((int) atomic_cas_32((volatile uint32_t*)lock, 0, 1) == 0);
 #elif defined(PS2)
     uint32_t oldintr;
     SDL_bool res = SDL_FALSE;
@@ -147,7 +150,7 @@ SDL_AtomicTryLock(SDL_SpinLock *lock)
         res = SDL_TRUE;
     }
     // enable interuption
-    if (oldintr) { EIntr(); }
+    if(oldintr) { EIntr(); }
     return res;
 #else
 #error Please implement for your platform.

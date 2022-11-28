@@ -22,9 +22,12 @@
 
 #ifdef SDL_HAPTIC_ANDROID
 
+#include "SDL_timer.h"
 #include "SDL_syshaptic_c.h"
 #include "../SDL_syshaptic.h"
+#include "SDL_haptic.h"
 #include "../../core/android/SDL_android.h"
+#include "SDL_joystick.h"
 #include "../../joystick/SDL_sysjoystick.h"     /* For the real SDL_Joystick */
 #include "../../joystick/android/SDL_sysjoystick_c.h"     /* For joystick hwdata */
 
@@ -54,13 +57,13 @@ SDL_SYS_HapticInit(void)
         timeout = SDL_GetTicks() + 3000;
         Android_JNI_PollHapticDevices();
     }
-    return numhaptics;
+    return (numhaptics);
 }
 
 int
 SDL_SYS_NumHaptics(void)
 {
-    return numhaptics;
+    return (numhaptics);
 }
 
 static SDL_hapticlist_item *
@@ -133,19 +136,19 @@ OpenHaptic(SDL_Haptic *haptic, SDL_hapticlist_item *item)
 static SDL_hapticlist_item *
 OpenHapticByOrder(SDL_Haptic *haptic, int index)
 {
-    return OpenHaptic(haptic, HapticByOrder(index));
+    return OpenHaptic (haptic, HapticByOrder(index));
 }
 
 static SDL_hapticlist_item *
 OpenHapticByDevId(SDL_Haptic *haptic, int device_id)
 {
-    return OpenHaptic(haptic, HapticByDevId(device_id));
+    return OpenHaptic (haptic, HapticByDevId(device_id));
 }
 
 int
 SDL_SYS_HapticOpen(SDL_Haptic *haptic)
 {
-    return OpenHapticByOrder(haptic, haptic->index) == NULL ? -1 : 0;
+    return (OpenHapticByOrder(haptic, haptic->index) == NULL ? -1 : 0);
 }
 
 
@@ -168,14 +171,14 @@ SDL_SYS_JoystickIsHaptic(SDL_Joystick *joystick)
 int
 SDL_SYS_HapticOpenFromJoystick(SDL_Haptic *haptic, SDL_Joystick *joystick)
 {
-    return OpenHapticByDevId(haptic, ((joystick_hwdata *)joystick->hwdata)->device_id) == NULL ? -1 : 0;
+    return (OpenHapticByDevId(haptic, ((joystick_hwdata *)joystick->hwdata)->device_id) == NULL ? -1 : 0);
 }
 
 
 int
 SDL_SYS_JoystickSameHaptic(SDL_Haptic * haptic, SDL_Joystick * joystick)
 {
-    return ((SDL_hapticlist_item *)haptic->hwdata)->device_id == ((joystick_hwdata *)joystick->hwdata)->device_id ? 1 : 0;
+    return (((SDL_hapticlist_item *)haptic->hwdata)->device_id == ((joystick_hwdata *)joystick->hwdata)->device_id ? 1 : 0);
 }
 
 

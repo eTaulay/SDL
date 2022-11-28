@@ -20,6 +20,7 @@
 */
 #include "../SDL_internal.h"
 
+#include "SDL_hints.h"
 
 /* General quit handling code for SDL */
 
@@ -27,6 +28,7 @@
 #include <signal.h>
 #endif
 
+#include "SDL_events.h"
 #include "SDL_events_c.h"
 
 #if defined(HAVE_SIGNAL_H) || defined(HAVE_SIGACTION)

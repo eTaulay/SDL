@@ -23,6 +23,9 @@
 
 #if SDL_VIDEO_DRIVER_WAYLAND
 
+#include "SDL_video.h"
+#include "SDL_mouse.h"
+#include "SDL_stdinc.h"
 #include "../../events/SDL_events_c.h"
 
 #include "SDL_waylandvideo.h"
@@ -34,6 +37,7 @@
 #include "SDL_waylandtouch.h"
 #include "SDL_waylandclipboard.h"
 #include "SDL_waylandvulkan.h"
+#include "SDL_hints.h"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -200,7 +204,7 @@ Wayland_CreateDevice(void)
 
     /* Initialize all variables that we clean on shutdown */
     device = SDL_calloc(1, sizeof(SDL_VideoDevice));
-    if (device == NULL) {
+    if (!device) {
         SDL_free(data);
         WAYLAND_wl_display_disconnect(display);
         SDL_WAYLAND_UnloadSymbols();
@@ -233,7 +237,6 @@ Wayland_CreateDevice(void)
     device->GL_UnloadLibrary = Wayland_GLES_UnloadLibrary;
     device->GL_GetProcAddress = Wayland_GLES_GetProcAddress;
     device->GL_DeleteContext = Wayland_GLES_DeleteContext;
-    device->GL_GetEGLSurface = Wayland_GLES_GetEGLSurface;
 #endif
 
     device->CreateSDLWindow = Wayland_CreateWindow;
@@ -596,7 +599,7 @@ display_handle_done(void *data,
 
     if (driverdata->has_logical_size) { /* If xdg-output is present, calculate the true scale of the desktop */
         driverdata->scale_factor = (float)native_mode.w / (float)driverdata->width;
-    } else { /* Scale the desktop coordinates, if xdg-output isn't present */
+    } else  { /* Scale the desktop coordinates, if xdg-output isn't present */
         driverdata->width /= driverdata->scale_factor;
         driverdata->height /= driverdata->scale_factor;
     }
@@ -702,7 +705,7 @@ Wayland_add_display(SDL_VideoData *d, uint32_t id)
     SDL_WaylandOutputData *data;
 
     output = wl_registry_bind(d->registry, id, &wl_output_interface, 2);
-    if (output == NULL) {
+    if (!output) {
         SDL_SetError("Failed to retrieve output.");
         return;
     }

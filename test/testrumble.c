@@ -25,8 +25,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 /*
  * includes
  */
-#include <SDL3/SDL.h>
+#include "SDL.h"
 
+#ifndef SDL_HAPTIC_DISABLED
 
 static SDL_Haptic *haptic;
 
@@ -78,9 +79,8 @@ main(int argc, char **argv)
         /* Try to find matching device */
         else {
             for (i = 0; i < SDL_NumHaptics(); i++) {
-                if (SDL_strstr(SDL_HapticName(i), name) != NULL) {
+                if (SDL_strstr(SDL_HapticName(i), name) != NULL)
                     break;
-                }
             }
 
             if (i >= SDL_NumHaptics()) {
@@ -130,12 +130,20 @@ main(int argc, char **argv)
     SDL_Delay(2000);
 
     /* Quit */
-    if (haptic != NULL) {
+    if (haptic != NULL)
         SDL_HapticClose(haptic);
-    }
     SDL_Quit();
 
     return 0;
 }
 
-/* vi: set ts=4 sw=4 expandtab: */
+#else
+
+int
+main(int argc, char *argv[])
+{
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL compiled without Haptic support.\n");
+    return 1;
+}
+
+#endif

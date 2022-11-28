@@ -24,6 +24,10 @@
 
 #include <unistd.h> /* For getpid() and readlink() */
 
+#include "SDL_video.h"
+#include "SDL_mouse.h"
+#include "SDL_timer.h"
+#include "SDL_hints.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 
@@ -163,19 +167,19 @@ X11_CreateDevice(void)
     /* Open the display first to be sure that X11 is available */
     x11_display = X11_XOpenDisplay(display);
 
-    if (x11_display == NULL) {
+    if (!x11_display) {
         SDL_X11_UnloadSymbols();
         return NULL;
     }
 
     /* Initialize all variables that we clean on shutdown */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
-    if (device == NULL) {
+    if (!device) {
         SDL_OutOfMemory();
         return NULL;
     }
     data = (struct SDL_VideoData *) SDL_calloc(1, sizeof(SDL_VideoData));
-    if (data == NULL) {
+    if (!data) {
         SDL_free(device);
         SDL_OutOfMemory();
         return NULL;
@@ -250,6 +254,7 @@ X11_CreateDevice(void)
     device->SetWindowResizable = X11_SetWindowResizable;
     device->SetWindowAlwaysOnTop = X11_SetWindowAlwaysOnTop;
     device->SetWindowFullscreen = X11_SetWindowFullscreen;
+    device->SetWindowGammaRamp = X11_SetWindowGammaRamp;
     device->SetWindowMouseGrab = X11_SetWindowMouseGrab;
     device->SetWindowKeyboardGrab = X11_SetWindowKeyboardGrab;
     device->DestroyWindow = X11_DestroyWindow;
@@ -279,11 +284,10 @@ X11_CreateDevice(void)
     device->GL_GetSwapInterval = X11_GL_GetSwapInterval;
     device->GL_SwapWindow = X11_GL_SwapWindow;
     device->GL_DeleteContext = X11_GL_DeleteContext;
-    device->GL_GetEGLSurface = NULL;
 #endif
 #if SDL_VIDEO_OPENGL_EGL
 #if SDL_VIDEO_OPENGL_GLX
-    if (SDL_GetHintBoolean(SDL_HINT_VIDEO_FORCE_EGL, SDL_FALSE)) {
+    if (SDL_GetHintBoolean(SDL_HINT_VIDEO_X11_FORCE_EGL, SDL_FALSE)) {
 #endif
         device->GL_LoadLibrary = X11_GLES_LoadLibrary;
         device->GL_GetProcAddress = X11_GLES_GetProcAddress;
@@ -294,7 +298,6 @@ X11_CreateDevice(void)
         device->GL_GetSwapInterval = X11_GLES_GetSwapInterval;
         device->GL_SwapWindow = X11_GLES_SwapWindow;
         device->GL_DeleteContext = X11_GLES_DeleteContext;
-        device->GL_GetEGLSurface = X11_GLES_GetEGLSurface;
 #if SDL_VIDEO_OPENGL_GLX
     }
 #endif
@@ -336,9 +339,9 @@ static int
 X11_CheckWindowManagerErrorHandler(Display * d, XErrorEvent * e)
 {
     if (e->error_code == BadWindow) {
-        return 0;
+        return (0);
     } else {
-        return handler(d, e);
+        return (handler(d, e));
     }
 }
 
@@ -470,7 +473,7 @@ X11_VideoInit(_THIS)
 #endif /* SDL_VIDEO_DRIVER_X11_XFIXES */
 
 #ifndef X_HAVE_UTF8_STRING
-#warning X server does not support UTF8_STRING, a feature introduced in 2000! This is likely to become a hard error in a future libSDL3.
+#warning X server does not support UTF8_STRING, a feature introduced in 2000! This is likely to become a hard error in a future libSDL2.
 #endif
 
     if (X11_InitKeyboard(_this) != 0) {

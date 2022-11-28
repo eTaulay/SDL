@@ -29,6 +29,9 @@
 #include <swis.h>
 #include <unixlib/local.h>
 
+#include "SDL_error.h"
+#include "SDL_stdinc.h"
+#include "SDL_filesystem.h"
 
 /* Wrapper around __unixify_std that uses SDL's memory allocators */
 static char *
@@ -36,23 +39,22 @@ SDL_unixify_std(const char *ro_path, char *buffer, size_t buf_len, int filetype)
 {
     const char *const in_buf = buffer; /* = NULL if we allocate the buffer.  */
 
-    if (buffer == NULL) {
+    if (!buffer) {
         /* This matches the logic in __unixify, with an additional byte for the
          * extra path separator.
          */
         buf_len = SDL_strlen(ro_path) + 14 + 1;
         buffer = SDL_malloc(buf_len);
 
-        if (buffer == NULL) {
+        if (!buffer) {
             SDL_OutOfMemory();
             return NULL;
         }
     }
 
     if (!__unixify_std(ro_path, buffer, buf_len, filetype)) {
-        if (in_buf == NULL) {
+        if (!in_buf)
             SDL_free(buffer);
-        }
 
         SDL_SetError("Could not convert '%s' to a Unix-style path", ro_path);
         return NULL;
@@ -91,7 +93,7 @@ canonicalisePath(const char *path, const char *pathVar)
 
     regs.r[5] = 1 - regs.r[5];
     buf = SDL_malloc(regs.r[5]);
-    if (buf == NULL) {
+    if (!buf) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -121,9 +123,8 @@ createDirectoryRecursive(char *path)
             *ptr = '\0';
             error = _kernel_swi(OS_File, &regs, &regs);
             *ptr = '.';
-            if (error != NULL) {
+            if (error != NULL)
                 return error;
-            }
         }
     }
     return _kernel_swi(OS_File, &regs, &regs);
@@ -142,15 +143,14 @@ SDL_GetBasePath(void)
     }
 
     canon = canonicalisePath((const char *)regs.r[0], "Run$Path");
-    if (canon == NULL) {
+    if (!canon) {
         return NULL;
     }
 
     /* chop off filename. */
     ptr = SDL_strrchr(canon, '.');
-    if (ptr != NULL) {
+    if (ptr != NULL)
         *ptr = '\0';
-    }
 
     retval = SDL_unixify_std(canon, NULL, 0, __RISCOSIFY_FILETYPE_NOTSPECIFIED);
     SDL_free(canon);
@@ -164,22 +164,22 @@ SDL_GetPrefPath(const char *org, const char *app)
     size_t len;
     _kernel_oserror *error;
 
-    if (app == NULL) {
+    if (!app) {
         SDL_InvalidParamError("app");
         return NULL;
     }
-    if (org == NULL) {
+    if (!org) {
         org = "";
     }
 
     canon = canonicalisePath("<Choices$Write>", "Run$Path");
-    if (canon == NULL) {
+    if (!canon) {
         return NULL;
     }
 
     len = SDL_strlen(canon) + SDL_strlen(org) + SDL_strlen(app) + 4;
     dir = (char *) SDL_malloc(len);
-    if (dir == NULL) {
+    if (!dir) {
         SDL_OutOfMemory();
         SDL_free(canon);
         return NULL;

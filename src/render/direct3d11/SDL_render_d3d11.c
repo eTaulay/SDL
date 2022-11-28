@@ -20,6 +20,8 @@
 */
 #include "../../SDL_internal.h"
 
+#include "SDL_render.h"
+#include "SDL_system.h"
 
 #if SDL_VIDEO_RENDER_D3D11 && !SDL_RENDER_DISABLED
 
@@ -28,11 +30,11 @@
 #if !defined(__WINRT__)
 #include "../../video/windows/SDL_windowswindow.h"
 #endif
+#include "SDL_hints.h"
+#include "SDL_loadso.h"
+#include "SDL_syswm.h"
 #include "../SDL_sysrender.h"
 #include "../SDL_d3dmath.h"
-
-#define SDL_ENABLE_SYSWM_WINDOWS
-#include <SDL3/SDL_syswm.h>
 
 #include <d3d11_1.h>
 
@@ -389,7 +391,7 @@ D3D11_CreateBlendState(SDL_Renderer * renderer, SDL_BlendMode blendMode)
     }
 
     blendModes = (D3D11_BlendMode *)SDL_realloc(data->blendModes, (data->blendModesCount + 1) * sizeof(*blendModes));
-    if (blendModes == NULL) {
+    if (!blendModes) {
         SAFE_RELEASE(blendState);
         SDL_OutOfMemory();
         return NULL;
@@ -448,7 +450,7 @@ D3D11_CreateDeviceResources(SDL_Renderer * renderer)
     }
 
     CreateDXGIFactoryFunc = (PFN_CREATE_DXGI_FACTORY)SDL_LoadFunction(data->hDXGIMod, "CreateDXGIFactory");
-    if (CreateDXGIFactoryFunc == NULL) {
+    if (!CreateDXGIFactoryFunc) {
         result = E_FAIL;
         goto done;
     }
@@ -827,13 +829,8 @@ D3D11_CreateSwapChain(SDL_Renderer * renderer, int w, int h)
     } else {
 #if defined(__WIN32__) || defined(__WINGDK__)
         SDL_SysWMinfo windowinfo;
-
-        if (SDL_GetWindowWMInfo(renderer->window, &windowinfo, SDL_SYSWM_CURRENT_VERSION) < 0 ||
-            windowinfo.subsystem != SDL_SYSWM_WINDOWS) {
-            SDL_SetError("Couldn't get window handle");
-            result = E_FAIL;
-            goto done;
-        }
+        SDL_VERSION(&windowinfo.version);
+        SDL_GetWindowWMInfo(renderer->window, &windowinfo);
 
         result = IDXGIFactory2_CreateSwapChainForHwnd(data->dxgiFactory,
             (IUnknown *)data->d3dDevice,
@@ -1105,7 +1102,7 @@ D3D11_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     }
 
     textureData = (D3D11_TextureData*) SDL_calloc(1, sizeof(*textureData));
-    if (textureData == NULL) {
+    if (!textureData) {
         SDL_OutOfMemory();
         return -1;
     }
@@ -1275,7 +1272,7 @@ D3D11_DestroyTexture(SDL_Renderer * renderer,
 {
     D3D11_TextureData *data = (D3D11_TextureData *)texture->driverdata;
 
-    if (data == NULL) {
+    if (!data) {
         return;
     }
 
@@ -1385,7 +1382,7 @@ D3D11_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D11_RenderData *rendererData = (D3D11_RenderData *)renderer->driverdata;
     D3D11_TextureData *textureData = (D3D11_TextureData *)texture->driverdata;
 
-    if (textureData == NULL) {
+    if (!textureData) {
         return SDL_SetError("Texture is not currently available");
     }
 
@@ -1431,7 +1428,7 @@ D3D11_UpdateTextureYUV(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D11_RenderData *rendererData = (D3D11_RenderData *)renderer->driverdata;
     D3D11_TextureData *textureData = (D3D11_TextureData *)texture->driverdata;
 
-    if (textureData == NULL) {
+    if (!textureData) {
         return SDL_SetError("Texture is not currently available");
     }
 
@@ -1456,7 +1453,7 @@ D3D11_UpdateTextureNV(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D11_RenderData *rendererData = (D3D11_RenderData *)renderer->driverdata;
     D3D11_TextureData *textureData = (D3D11_TextureData *)texture->driverdata;
 
-    if (textureData == NULL) {
+    if (!textureData) {
         return SDL_SetError("Texture is not currently available");
     }
 
@@ -1481,7 +1478,7 @@ D3D11_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D11_TEXTURE2D_DESC stagingTextureDesc;
     D3D11_MAPPED_SUBRESOURCE textureMemory;
 
-    if (textureData == NULL) {
+    if (!textureData) {
         return SDL_SetError("Texture is not currently available");
     }
 #if SDL_HAVE_YUV
@@ -1562,7 +1559,7 @@ D3D11_UnlockTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     D3D11_RenderData *rendererData = (D3D11_RenderData *) renderer->driverdata;
     D3D11_TextureData *textureData = (D3D11_TextureData *) texture->driverdata;
     
-    if (textureData == NULL) {
+    if (!textureData) {
         return;
     }
 #if SDL_HAVE_YUV
@@ -1599,7 +1596,7 @@ D3D11_SetTextureScaleMode(SDL_Renderer * renderer, SDL_Texture * texture, SDL_Sc
 {
     D3D11_TextureData *textureData = (D3D11_TextureData *) texture->driverdata;
     
-    if (textureData == NULL) {
+    if (!textureData) {
         return;
     }
 
@@ -1645,7 +1642,7 @@ D3D11_QueueDrawPoints(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL
     color.b = cmd->data.draw.b;
     color.a = cmd->data.draw.a;
 
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
 
@@ -1673,7 +1670,7 @@ D3D11_QueueGeometry(SDL_Renderer *renderer, SDL_RenderCommand *cmd, SDL_Texture 
     int count = indices ? num_indices : num_vertices;
     VertexPositionColor *verts = (VertexPositionColor *) SDL_AllocateRenderVertices(renderer, count * sizeof (VertexPositionColor), 0, &cmd->data.draw.first);
 
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
 
@@ -1817,13 +1814,13 @@ D3D11_UpdateViewport(SDL_Renderer * renderer)
             projection = MatrixIdentity();
             break;
         case DXGI_MODE_ROTATION_ROTATE270:
-            projection = MatrixRotationZ(SDL_PI_F * 0.5f);
+            projection = MatrixRotationZ(SDL_static_cast(float, M_PI * 0.5f));
             break;
         case DXGI_MODE_ROTATION_ROTATE180:
-            projection = MatrixRotationZ(SDL_PI_F);
+            projection = MatrixRotationZ(SDL_static_cast(float, M_PI));
             break;
         case DXGI_MODE_ROTATION_ROTATE90:
-            projection = MatrixRotationZ(-SDL_PI_F * 0.5f);
+            projection = MatrixRotationZ(SDL_static_cast(float, -M_PI * 0.5f));
             break;
         default:
             return SDL_SetError("An unknown DisplayOrientation is being used");
@@ -1885,7 +1882,8 @@ D3D11_GetCurrentRenderTargetView(SDL_Renderer * renderer)
     D3D11_RenderData *data = (D3D11_RenderData *)renderer->driverdata;
     if (data->currentOffscreenRenderTargetView) {
         return data->currentOffscreenRenderTargetView;
-    } else {
+    }
+    else {
         return data->mainRenderTargetView;
     }
 }
@@ -1953,9 +1951,9 @@ D3D11_SetDrawState(SDL_Renderer * renderer, const SDL_RenderCommand *cmd, ID3D11
                 break;
             }
         }
-        if (blendState == NULL) {
+        if (!blendState) {
             blendState = D3D11_CreateBlendState(renderer, blendMode);
-            if (blendState == NULL) {
+            if (!blendState) {
                 return -1;
             }
         }
@@ -2371,13 +2369,13 @@ D3D11_CreateRenderer(SDL_Window * window, Uint32 flags)
     D3D11_RenderData *data;
 
     renderer = (SDL_Renderer *) SDL_calloc(1, sizeof(*renderer));
-    if (renderer == NULL) {
+    if (!renderer) {
         SDL_OutOfMemory();
         return NULL;
     }
 
     data = (D3D11_RenderData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         SDL_free(renderer);
         SDL_OutOfMemory();
         return NULL;

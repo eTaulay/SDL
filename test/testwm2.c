@@ -11,13 +11,14 @@
 */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL_test_common.h>
-#include <SDL3/SDL_test_font.h>
+#include "SDL_test_common.h"
+#include "SDL_test_font.h"
 
 static SDLTest_CommonState *state;
 int done;
@@ -263,7 +264,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
 
@@ -294,7 +295,7 @@ main(int argc, char *argv[])
 
     quit(0);
     /* keep the compiler happy ... */
-    return 0;
+    return(0);
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

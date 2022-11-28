@@ -139,7 +139,7 @@ LoadTexture(SDL_Renderer *renderer, const char *file, SDL_bool transparent,
         }
 
         texture = SDL_CreateTextureFromSurface(renderer, temp);
-        if (texture == NULL) {
+        if (!texture) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture: %s\n", SDL_GetError());
         }
     }
@@ -149,5 +149,3 @@ LoadTexture(SDL_Renderer *renderer, const char *file, SDL_bool transparent,
     }
     return texture;
 }
-
-/* vi: set ts=4 sw=4 expandtab: */

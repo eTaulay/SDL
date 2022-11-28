@@ -25,6 +25,7 @@
 
 #include "SDL_androidmouse.h"
 
+#include "SDL_events.h"
 #include "../../events/SDL_mouse_c.h"
 
 #include "../../core/android/SDL_android.h"
@@ -91,7 +92,7 @@ Android_CreateCursor(SDL_Surface * surface, int hot_x, int hot_y)
     SDL_Surface *converted;
 
     converted = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
-    if (converted == NULL) {
+    if (!converted) {
         return NULL;
     }
     custom_cursor = Android_JNI_CreateCustomCursor(converted, hot_x, hot_y);
@@ -123,7 +124,7 @@ Android_FreeCursor(SDL_Cursor * cursor)
 static SDL_Cursor *
 Android_CreateEmptyCursor()
 {
-    if (empty_cursor == NULL) {
+    if (!empty_cursor) {
         SDL_Surface *empty_surface = SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 32, SDL_PIXELFORMAT_ARGB8888);
         if (empty_surface) {
             SDL_memset(empty_surface->pixels, 0, empty_surface->h * empty_surface->pitch);
@@ -146,7 +147,7 @@ Android_DestroyEmptyCursor()
 static int
 Android_ShowCursor(SDL_Cursor *cursor)
 {
-    if (cursor == NULL) {
+    if (!cursor) {
         cursor = Android_CreateEmptyCursor();
     }
     if (cursor) {
@@ -228,7 +229,7 @@ Android_OnMouse(SDL_Window *window, int state, int action, float x, float y, SDL
     int changes;
     Uint8 button;
 
-    if (window == NULL) {
+    if (!window) {
         return;
     }
 

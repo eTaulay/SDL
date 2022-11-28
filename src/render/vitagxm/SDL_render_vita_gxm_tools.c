@@ -22,7 +22,9 @@
 
 #if SDL_VIDEO_RENDER_VITA_GXM
 
+#include "SDL_hints.h"
 #include "../SDL_sysrender.h"
+#include "SDL_log.h"
 
 #include <psp2/kernel/processmgr.h>
 #include <psp2/appmgr.h>
@@ -258,7 +260,7 @@ set_stencil_mask(VITA_GXM_RenderData *data, float x, float y, float w, float h)
 void
 set_clip_rectangle(VITA_GXM_RenderData *data, int x_min, int y_min, int x_max, int y_max)
 {
-    if (data->drawing) {
+    if(data->drawing) {
         // clear the stencil buffer to 0
         sceGxmSetFrontStencilFunc(
             data->gxm_context,
@@ -748,7 +750,8 @@ gxm_init(SDL_Renderer *renderer)
         &data->linearIndicesUid
     );
 
-    for (i = 0; i <= UINT16_MAX; ++i) {
+    for (i = 0; i <= UINT16_MAX; ++i)
+    {
         data->linearIndices[i] = i;
     }
 
@@ -926,7 +929,8 @@ void gxm_finish(SDL_Renderer *renderer)
     // clean up display queue
     vita_mem_free(data->depthBufferUid);
 
-    for (size_t i = 0; i < VITA_GXM_BUFFERS; i++) {
+    for (size_t i = 0; i < VITA_GXM_BUFFERS; i++)
+    {
         // clear the buffer then deallocate
         SDL_memset(data->displayBufferData[i], 0, VITA_GXM_SCREEN_HEIGHT * VITA_GXM_SCREEN_STRIDE * 4);
         vita_mem_free(data->displayBufferUid[i]);
@@ -1046,9 +1050,8 @@ create_gxm_texture(VITA_GXM_RenderData *data, unsigned int w, unsigned int h, Sc
         tex_size += (((aligned_w + 1) / 2) * ((h + 1) / 2)) * 2;
     }
 
-    if (texture == NULL) {
+    if (!texture)
         return NULL;
-    }
 
     *return_w = w;
     *return_h = h;
@@ -1061,7 +1064,7 @@ create_gxm_texture(VITA_GXM_RenderData *data, unsigned int w, unsigned int h, Sc
     );
 
     /* Try SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE in case we're out of VRAM */
-    if (texture_data == NULL) {
+    if (!texture_data) {
         SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, "CDRAM texture allocation failed\n");
         texture_data = vita_mem_alloc(
             SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE,
@@ -1075,7 +1078,7 @@ create_gxm_texture(VITA_GXM_RenderData *data, unsigned int w, unsigned int h, Sc
         texture->cdram = 1;
     }
 
-    if (texture_data == NULL) {
+    if (!texture_data) {
         SDL_free(texture);
         return NULL;
     }
@@ -1208,7 +1211,8 @@ void gxm_minimal_term_for_common_dialog(void)
 
 void gxm_init_for_common_dialog(void)
 {
-    for (int i = 0; i < VITA_GXM_BUFFERS; i += 1) {
+    for (int i = 0; i < VITA_GXM_BUFFERS; i += 1)
+    {
         buffer_for_common_dialog[i].displayData.wait_vblank = SDL_TRUE;
         buffer_for_common_dialog[i].displayData.address = vita_mem_alloc(
             SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,
@@ -1256,7 +1260,8 @@ void gxm_swap_for_common_dialog(void)
 void gxm_term_for_common_dialog(void)
 {
     sceGxmDisplayQueueFinish();
-    for (int i = 0; i < VITA_GXM_BUFFERS; i += 1) {
+    for (int i = 0; i < VITA_GXM_BUFFERS; i += 1)
+    {
         vita_mem_free(buffer_for_common_dialog[i].uid);
         sceGxmSyncObjectDestroy(buffer_for_common_dialog[i].sync);
     }

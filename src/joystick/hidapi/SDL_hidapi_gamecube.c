@@ -22,6 +22,11 @@
 
 #ifdef SDL_JOYSTICK_HIDAPI
 
+#include "SDL_events.h"
+#include "SDL_timer.h"
+#include "SDL_haptic.h"
+#include "SDL_joystick.h"
+#include "SDL_gamecontroller.h"
 #include "../../SDL_hints_c.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
@@ -141,7 +146,7 @@ HIDAPI_DriverGameCube_InitDevice(SDL_HIDAPI_Device *device)
 #endif
 
     ctx = (SDL_DriverGameCube_Context *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
@@ -253,7 +258,7 @@ HIDAPI_DriverGameCube_HandleJoystickPacket(SDL_HIDAPI_Device *device, SDL_Driver
     }
 
     joystick = SDL_JoystickFromInstanceID(ctx->joysticks[i]);
-    if (joystick == NULL) {
+    if (!joystick) {
         /* Hasn't been opened yet, skip */
         return;
     }

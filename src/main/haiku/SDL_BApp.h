@@ -37,6 +37,7 @@ extern "C" {
 
 #include "../../SDL_internal.h"
 
+#include "SDL_video.h"
 
 /* Local includes */
 #include "../../events/SDL_events_c.h"

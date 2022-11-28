@@ -22,6 +22,11 @@
 
 #if SDL_VIDEO_DRIVER_UIKIT
 
+#include "SDL_hints.h"
+#include "SDL_mouse.h"
+#include "SDL_system.h"
+#include "SDL_syswm.h"
+#include "SDL_video.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -30,12 +35,10 @@
 #include "SDL_uikitevents.h"
 #include "SDL_uikitmodes.h"
 #include "SDL_uikitwindow.h"
-#include "SDL_uikitappdelegate.h"
-#include "SDL_uikitview.h"
-#include "SDL_uikitopenglview.h"
+#import "SDL_uikitappdelegate.h"
 
-#define SDL_ENABLE_SYSWM_UIKIT
-#include <SDL3/SDL_syswm.h>
+#import "SDL_uikitview.h"
+#import "SDL_uikitopenglview.h"
 
 #include <Foundation/Foundation.h>
 
@@ -387,25 +390,44 @@ UIKit_GetWindowSizeInPixels(_THIS, SDL_Window * window, int *w, int *h)
     *h = size.height * scale;
 }}
 
-int
-UIKit_GetWindowWMInfo(_THIS, SDL_Window *window, SDL_SysWMinfo *info)
-{ @autoreleasepool
+SDL_bool
+UIKit_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
 {
-    SDL_WindowData *data = (__bridge SDL_WindowData *) window->driverdata;
+    @autoreleasepool {
+        SDL_WindowData *data = (__bridge SDL_WindowData *) window->driverdata;
 
-    info->subsystem = SDL_SYSWM_UIKIT;
-    info->info.uikit.window = data.uiwindow;
+        if (info->version.major <= SDL_MAJOR_VERSION) {
+            int versionnum = SDL_VERSIONNUM(info->version.major, info->version.minor, info->version.patch);
 
+            info->subsystem = SDL_SYSWM_UIKIT;
+            info->info.uikit.window = data.uiwindow;
+
+            /* These struct members were added in SDL 2.0.4. */
+            if (versionnum >= SDL_VERSIONNUM(2,0,4)) {
 #if SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
-    if ([data.viewcontroller.view isKindOfClass:[SDL_uikitopenglview class]]) {
-        SDL_uikitopenglview *glview = (SDL_uikitopenglview *)data.viewcontroller.view;
-        info->info.uikit.framebuffer = glview.drawableFramebuffer;
-        info->info.uikit.colorbuffer = glview.drawableRenderbuffer;
-        info->info.uikit.resolveFramebuffer = glview.msaaResolveFramebuffer;
-    }
+                if ([data.viewcontroller.view isKindOfClass:[SDL_uikitopenglview class]]) {
+                    SDL_uikitopenglview *glview = (SDL_uikitopenglview *)data.viewcontroller.view;
+                    info->info.uikit.framebuffer = glview.drawableFramebuffer;
+                    info->info.uikit.colorbuffer = glview.drawableRenderbuffer;
+                    info->info.uikit.resolveFramebuffer = glview.msaaResolveFramebuffer;
+                } else {
+#else
+                {
 #endif
-    return 0;
-}}
+                    info->info.uikit.framebuffer = 0;
+                    info->info.uikit.colorbuffer = 0;
+                    info->info.uikit.resolveFramebuffer = 0;
+                }
+            }
+
+            return SDL_TRUE;
+        } else {
+            SDL_SetError("Application not compiled with SDL %d",
+                         SDL_MAJOR_VERSION);
+            return SDL_FALSE;
+        }
+    }
+}
 
 #if !TARGET_OS_TV
 NSUInteger

@@ -23,6 +23,7 @@
 
 #include "../SDL_internal.h"
 
+#include "SDL_stdinc.h"
 
 #if SDL_VIDEO_VULKAN
 #if SDL_LOADSO_DISABLED || SDL_LOADSO_DUMMY
@@ -35,6 +36,9 @@
 #if SDL_VIDEO_DRIVER_COCOA
 #define VK_USE_PLATFORM_METAL_EXT
 #define VK_USE_PLATFORM_MACOS_MVK
+#endif
+#if SDL_VIDEO_DRIVER_DIRECTFB
+#define VK_USE_PLATFORM_DIRECTFB_EXT
 #endif
 #if SDL_VIDEO_DRIVER_UIKIT
 #define VK_USE_PLATFORM_METAL_EXT
@@ -56,7 +60,7 @@
 #define VK_NO_PROTOTYPES
 #include "./khronos/vulkan/vulkan.h"
 
-#include <SDL3/SDL_vulkan.h>
+#include "SDL_vulkan.h"
 
 
 extern const char *SDL_Vulkan_GetResultString(VkResult result);
@@ -82,7 +86,7 @@ extern SDL_bool SDL_Vulkan_Display_CreateSurface(void *vkGetInstanceProcAddr,
 #else
 
 /* No SDL Vulkan support, just include the header for typedefs */
-#include <SDL3/SDL_vulkan.h>
+#include "SDL_vulkan.h"
 
 typedef void (*PFN_vkGetInstanceProcAddr) (void);
 typedef int  (*PFN_vkEnumerateInstanceExtensionProperties) (void);

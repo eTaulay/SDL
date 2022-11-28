@@ -9,9 +9,10 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_test.h>
+#include "SDL.h"
+#include "SDL_test.h"
 
 /* ================= Test Case Implementation ================== */
 
@@ -460,7 +461,8 @@ int audio_printAudioDrivers()
    SDLTest_AssertCheck(n>=0, "Verify number of audio drivers >= 0, got: %i", n);
 
    /* List drivers. */
-   if (n>0) {
+   if (n>0)
+   {
       for (i=0; i<n; i++) {
          name = SDL_GetAudioDriver(i);
          SDLTest_AssertPass("Call to SDL_GetAudioDriver(%i)", i);
@@ -710,9 +712,7 @@ int audio_openCloseAndGetAudioStatus()
        device = SDL_GetAudioDeviceName(i, 0);
        SDLTest_AssertPass("SDL_GetAudioDeviceName(%i,0)", i);
        SDLTest_AssertCheck(device != NULL, "Validate device name is not NULL; got: %s", (device != NULL) ? device : "NULL");
-       if (device == NULL) {
-         return TEST_ABORTED;
-       }
+       if (device == NULL) return TEST_ABORTED;
 
        /* Set standard desired spec */
        desired.freq=22050;
@@ -770,9 +770,7 @@ int audio_lockUnlockOpenAudioDevice()
        device = SDL_GetAudioDeviceName(i, 0);
        SDLTest_AssertPass("SDL_GetAudioDeviceName(%i,0)", i);
        SDLTest_AssertCheck(device != NULL, "Validate device name is not NULL; got: %s", (device != NULL) ? device : "NULL");
-       if (device == NULL) {
-         return TEST_ABORTED;
-       }
+       if (device == NULL) return TEST_ABORTED;
 
        /* Set standard desired spec */
        desired.freq=22050;
@@ -880,9 +878,7 @@ int audio_convertAudio()
             SDLTest_LogError("%s", SDL_GetError());
           } else {
             SDLTest_AssertCheck(cvt.len_mult > 0, "Verify that cvt.len_mult value; expected: >0, got: %i", cvt.len_mult);
-            if (cvt.len_mult < 1) {
-              return TEST_ABORTED;
-            }
+            if (cvt.len_mult < 1) return TEST_ABORTED;
 
             /* Create some random data to convert */
             l = 64;
@@ -891,9 +887,7 @@ int audio_convertAudio()
             cvt.len = l;
             cvt.buf = (Uint8 *)SDL_malloc(ll);
             SDLTest_AssertCheck(cvt.buf != NULL, "Check data buffer to convert is not NULL");
-            if (cvt.buf == NULL) {
-              return TEST_ABORTED;
-            }
+            if (cvt.buf == NULL) return TEST_ABORTED;
 
             /* Convert the data */
             result = SDL_ConvertAudio(&cvt);
@@ -938,9 +932,7 @@ int audio_openCloseAudioDeviceConnected()
        device = SDL_GetAudioDeviceName(i, 0);
        SDLTest_AssertPass("SDL_GetAudioDeviceName(%i,0)", i);
        SDLTest_AssertCheck(device != NULL, "Validate device name is not NULL; got: %s", (device != NULL) ? device : "NULL");
-       if (device == NULL) {
-         return TEST_ABORTED;
-       }
+       if (device == NULL) return TEST_ABORTED;
 
        /* Set standard desired spec */
        desired.freq=22050;
@@ -956,7 +948,7 @@ int audio_openCloseAudioDeviceConnected()
        SDLTest_AssertCheck(id > 1, "Validate device ID; expected: >1, got: %" SDL_PRIu32, id);
        if (id > 1) {
 
-/* TODO: enable test code when function is available in SDL3 */
+/* TODO: enable test code when function is available in SDL2 */
 
 #ifdef AUDIODEVICECONNECTED_DEFINED
          /* Get connected status */
@@ -1046,5 +1038,3 @@ SDLTest_TestSuiteReference audioTestSuite = {
     audioTests,
     _audioTearDown
 };
-
-/* vi: set ts=4 sw=4 expandtab: */

@@ -1,10 +1,11 @@
 /*
     SDL_psp_main.c, placed in the public domain by Sam Lantinga  3/13/14
 */
-#include <SDL3/SDL.h>
+#include "SDL_config.h"
 
 #ifdef __PSP__
 
+#include "SDL_main.h"
 #include <pspkernel.h>
 #include <pspthreadman.h>
 
@@ -46,9 +47,8 @@ int sdl_psp_setup_callbacks(void)
     int thid;
     thid = sceKernelCreateThread("update_thread",
                      sdl_psp_callback_thread, 0x11, 0xFA0, 0, 0);
-    if (thid >= 0) {
+    if(thid >= 0)
         sceKernelStartThread(thid, 0, 0);
-    }
     return thid;
 }
 

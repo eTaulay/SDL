@@ -24,6 +24,7 @@
 
 #include "../../events/SDL_events_c.h"
 
+#include "SDL_log.h"
 #include "SDL_riscosvideo.h"
 #include "SDL_riscosevents_c.h"
 #include "scancodes_riscos.h"
@@ -147,9 +148,8 @@ RISCOS_InitEvents(_THIS)
     _kernel_swi_regs regs;
     int i, status;
 
-    for (i = 0; i < RISCOS_MAX_KEYS_PRESSED; i++) {
+    for (i = 0; i < RISCOS_MAX_KEYS_PRESSED; i++)
         driverdata->key_pressed[i] = 255;
-    }
 
     status = (_kernel_osbyte(202, 0, 255) & 0xFF);
     SDL_ToggleModState(KMOD_NUM,    (status & (1 << 2)) == 0);

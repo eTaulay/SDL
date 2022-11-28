@@ -20,17 +20,19 @@
 */
 #include "../../SDL_internal.h"
 
+#include "SDL_render.h"
+#include "SDL_system.h"
 
 #if SDL_VIDEO_RENDER_D3D && !SDL_RENDER_DISABLED
 
 #include "../../core/windows/SDL_windows.h"
 
+#include "SDL_hints.h"
+#include "SDL_loadso.h"
+#include "SDL_syswm.h"
 #include "../SDL_sysrender.h"
 #include "../SDL_d3dmath.h"
 #include "../../video/windows/SDL_windowsvideo.h"
-
-#define SDL_ENABLE_SYSWM_WINDOWS
-#include <SDL3/SDL_syswm.h>
 
 #if SDL_VIDEO_RENDER_D3D
 #define D3D_DEBUG_INFO
@@ -549,7 +551,7 @@ D3D_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     DWORD usage;
 
     texturedata = (D3D_TextureData *) SDL_calloc(1, sizeof(*texturedata));
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return SDL_OutOfMemory();
     }
     texturedata->scaleMode = (texture->scaleMode == SDL_ScaleModeNearest) ? D3DTEXF_POINT : D3DTEXF_LINEAR;
@@ -588,7 +590,7 @@ D3D_RecreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     D3D_RenderData *data = (D3D_RenderData *)renderer->driverdata;
     D3D_TextureData *texturedata = (D3D_TextureData *)texture->driverdata;
 
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return 0;
     }
 
@@ -616,7 +618,7 @@ D3D_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D_RenderData *data = (D3D_RenderData *)renderer->driverdata;
     D3D_TextureData *texturedata = (D3D_TextureData *) texture->driverdata;
 
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return SDL_SetError("Texture is not currently available");
     }
 
@@ -653,7 +655,7 @@ D3D_UpdateTextureYUV(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D_RenderData *data = (D3D_RenderData *)renderer->driverdata;
     D3D_TextureData *texturedata = (D3D_TextureData *) texture->driverdata;
 
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return SDL_SetError("Texture is not currently available");
     }
 
@@ -678,7 +680,7 @@ D3D_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     D3D_TextureData *texturedata = (D3D_TextureData *)texture->driverdata;
     IDirect3DDevice9 *device = data->device;
 
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return SDL_SetError("Texture is not currently available");
     }
 #if SDL_HAVE_YUV
@@ -729,7 +731,7 @@ D3D_UnlockTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     D3D_RenderData *data = (D3D_RenderData *)renderer->driverdata;
     D3D_TextureData *texturedata = (D3D_TextureData *)texture->driverdata;
 
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return;
     }
 #if SDL_HAVE_YUV
@@ -739,7 +741,8 @@ D3D_UnlockTexture(SDL_Renderer * renderer, SDL_Texture * texture)
             (void *) ((Uint8 *) texturedata->pixels + rect->y * texturedata->pitch +
                       rect->x * SDL_BYTESPERPIXEL(texture->format));
         D3D_UpdateTexture(renderer, texture, rect, pixels, texturedata->pitch);
-    } else
+    }
+    else
 #endif
     {
         IDirect3DTexture9_UnlockRect(texturedata->texture.staging, 0);
@@ -758,7 +761,7 @@ D3D_SetTextureScaleMode(SDL_Renderer * renderer, SDL_Texture * texture, SDL_Scal
 {
     D3D_TextureData *texturedata = (D3D_TextureData *)texture->driverdata;
 
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return;
     }
 
@@ -786,7 +789,7 @@ D3D_SetRenderTargetInternal(SDL_Renderer * renderer, SDL_Texture * texture)
     }
 
     texturedata = (D3D_TextureData *)texture->driverdata;
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return SDL_SetError("Texture is not currently available");
     }
 
@@ -809,11 +812,11 @@ D3D_SetRenderTargetInternal(SDL_Renderer * renderer, SDL_Texture * texture)
     }
 
     result = IDirect3DTexture9_GetSurfaceLevel(texturedata->texture.texture, 0, &data->currentRenderTarget);
-    if (FAILED(result)) {
+    if(FAILED(result)) {
         return D3D_SetError("GetSurfaceLevel()", result);
     }
     result = IDirect3DDevice9_SetRenderTarget(data->device, 0, data->currentRenderTarget);
-    if (FAILED(result)) {
+    if(FAILED(result)) {
         return D3D_SetError("SetRenderTarget()", result);
     }
 
@@ -845,7 +848,7 @@ D3D_QueueDrawPoints(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_F
     Vertex *verts = (Vertex *) SDL_AllocateRenderVertices(renderer, vertslen, 0, &cmd->data.draw.first);
     int i;
 
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
 
@@ -871,7 +874,7 @@ D3D_QueueGeometry(SDL_Renderer *renderer, SDL_RenderCommand *cmd, SDL_Texture *t
     int count = indices ? num_indices : num_vertices;
     Vertex *verts = (Vertex *) SDL_AllocateRenderVertices(renderer, count * sizeof (Vertex), 0, &cmd->data.draw.first);
 
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
 
@@ -971,7 +974,7 @@ SetupTextureState(D3D_RenderData *data, SDL_Texture * texture, LPDIRECT3DPIXELSH
 
     SDL_assert(*shader == NULL);
 
-    if (texturedata == NULL) {
+    if (!texturedata) {
         return SDL_SetError("Texture is not currently available");
     }
 
@@ -1028,7 +1031,7 @@ SetDrawState(D3D_RenderData *data, const SDL_RenderCommand *cmd)
             IDirect3DDevice9_SetTexture(data->device, 0, NULL);
         }
 #if SDL_HAVE_YUV
-        if ((newtexturedata == NULL || !newtexturedata->yuv) && (oldtexturedata && oldtexturedata->yuv)) {
+        if ((!newtexturedata || !newtexturedata->yuv) && (oldtexturedata && oldtexturedata->yuv)) {
             IDirect3DDevice9_SetTexture(data->device, 1, NULL);
             IDirect3DDevice9_SetTexture(data->device, 2, NULL);
         }
@@ -1419,7 +1422,7 @@ D3D_DestroyTexture(SDL_Renderer * renderer, SDL_Texture * texture)
 #endif
     }
 
-    if (data == NULL) {
+    if (!data) {
         return;
     }
 
@@ -1593,20 +1596,14 @@ D3D_CreateRenderer(SDL_Window * window, Uint32 flags)
     SDL_DisplayMode fullscreen_mode;
     int displayIndex;
 
-    if (SDL_GetWindowWMInfo(window, &windowinfo, SDL_SYSWM_CURRENT_VERSION) < 0 ||
-        windowinfo.subsystem != SDL_SYSWM_WINDOWS) {
-        SDL_SetError("Couldn't get window handle");
-        return NULL;
-    }
-
     renderer = (SDL_Renderer *) SDL_calloc(1, sizeof(*renderer));
-    if (renderer == NULL) {
+    if (!renderer) {
         SDL_OutOfMemory();
         return NULL;
     }
 
     data = (D3D_RenderData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         SDL_free(renderer);
         SDL_OutOfMemory();
         return NULL;
@@ -1645,6 +1642,9 @@ D3D_CreateRenderer(SDL_Window * window, Uint32 flags)
     renderer->info = D3D_RenderDriver.info;
     renderer->info.flags = (SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
     renderer->driverdata = data;
+
+    SDL_VERSION(&windowinfo.version);
+    SDL_GetWindowWMInfo(window, &windowinfo);
 
     window_flags = SDL_GetWindowFlags(window);
     SDL_GetWindowSizeInPixels(window, &w, &h);

@@ -17,7 +17,7 @@
 
 #include <stdio.h>
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 #include "testutils.h"
 
 static size_t
@@ -62,9 +62,9 @@ main(int argc, char *argv[])
 
     fname = GetResourceFilename(argc > 1 ? argv[1] : NULL, "utf8.txt");
     file = fopen(fname, "rb");
-    if (file == NULL) {
+    if (!file) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to open %s\n", fname);
-        return 1;
+        return (1);
     }
     SDL_free(fname);
 
@@ -93,7 +93,5 @@ main(int argc, char *argv[])
     fclose(file);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Total errors: %d\n", errors);
-    return errors ? errors + 1 : 0;
+    return (errors ? errors + 1 : 0);
 }
-
-/* vi: set ts=4 sw=4 expandtab: */

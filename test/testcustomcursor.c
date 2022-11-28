@@ -9,13 +9,15 @@
   including commercial applications, and to alter it and redistribute it
   freely.
 */
+
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL_test_common.h>
+#include "SDL_test_common.h"
 
 /* Stolen from the mailing list */
 /* Creates a new mouse cursor from an XPM */
@@ -214,7 +216,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
     for (i = 1; i < argc;) {
@@ -291,7 +293,7 @@ main(int argc, char *argv[])
     quit(0);
 
     /* keep the compiler happy ... */
-    return 0;
+    return(0);
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

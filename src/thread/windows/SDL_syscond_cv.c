@@ -20,6 +20,8 @@
 */
 #include "../../SDL_internal.h"
 
+#include "SDL_hints.h"
+#include "SDL_thread.h"
 
 #include "../generic/SDL_syscond_c.h"
 #include "SDL_sysmutex_c.h"
@@ -86,7 +88,7 @@ SDL_CreateCond_cv(void)
 
     /* Relies on CONDITION_VARIABLE_INIT == 0. */
     cond = (SDL_cond_cv *) SDL_calloc(1, sizeof(*cond));
-    if (cond == NULL) {
+    if (!cond) {
         SDL_OutOfMemory();
     }
 
@@ -106,7 +108,7 @@ static int
 SDL_CondSignal_cv(SDL_cond * _cond)
 {
     SDL_cond_cv *cond = (SDL_cond_cv *)_cond;
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     }
 
@@ -119,7 +121,7 @@ static int
 SDL_CondBroadcast_cv(SDL_cond * _cond)
 {
     SDL_cond_cv *cond = (SDL_cond_cv *)_cond;
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     }
 
@@ -135,10 +137,10 @@ SDL_CondWaitTimeout_cv(SDL_cond * _cond, SDL_mutex * _mutex, Uint32 ms)
     DWORD timeout;
     int ret;
 
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     }
-    if (_mutex == NULL) {
+    if (!_mutex) {
         return SDL_InvalidParamError("mutex");
     }
 
@@ -232,7 +234,7 @@ SDL_CreateCond(void)
         if (SDL_mutex_impl_active.Type == SDL_MUTEX_INVALID) {
             /* The mutex implementation isn't decided yet, trigger it */
             SDL_mutex *mutex = SDL_CreateMutex();
-            if (mutex == NULL) {
+            if (!mutex) {
                 return NULL;
             }
             SDL_DestroyMutex(mutex);

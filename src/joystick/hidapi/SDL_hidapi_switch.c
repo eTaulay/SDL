@@ -25,6 +25,10 @@
 
 #ifdef SDL_JOYSTICK_HIDAPI
 
+#include "SDL_events.h"
+#include "SDL_timer.h"
+#include "SDL_joystick.h"
+#include "SDL_gamecontroller.h"
 #include "../../SDL_hints_c.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
@@ -396,9 +400,9 @@ static SDL_bool WritePacket(SDL_DriverSwitch_Context *ctx, void *pBuf, Uint8 ucL
         ucLen = (Uint8)unWriteSize;
     }
     if (ctx->m_bSyncWrite) {
-        return SDL_hid_write(ctx->device->dev, (Uint8 *)pBuf, ucLen) >= 0;
+        return (SDL_hid_write(ctx->device->dev, (Uint8 *)pBuf, ucLen) >= 0);
     } else {
-        return WriteOutput(ctx, (Uint8 *)pBuf, ucLen) >= 0;
+        return (WriteOutput(ctx, (Uint8 *)pBuf, ucLen) >= 0);
     }
 }
 
@@ -407,7 +411,7 @@ static SDL_bool WriteSubcommand(SDL_DriverSwitch_Context *ctx, ESwitchSubcommand
     SwitchSubcommandInputPacket_t *reply = NULL;
     int nTries;
 
-    for (nTries = 1; reply == NULL && nTries <= ctx->m_nMaxWriteAttempts; ++nTries) {
+    for (nTries = 1; !reply && nTries <= ctx->m_nMaxWriteAttempts; ++nTries) {
         SwitchSubcommandOutputPacket_t commandPacket;
         ConstructSubcommand(ctx, ucCommandID, pBuf, ucLen, &commandPacket);
 
@@ -431,7 +435,7 @@ static SDL_bool WriteProprietary(SDL_DriverSwitch_Context *ctx, ESwitchProprieta
     for (nTries = 1; nTries <= ctx->m_nMaxWriteAttempts; ++nTries) {
         SwitchProprietaryOutputPacket_t packet;
 
-        if ((pBuf == NULL && ucLen > 0) || ucLen > sizeof(packet.rgucProprietaryData)) {
+        if ((!pBuf && ucLen > 0) || ucLen > sizeof(packet.rgucProprietaryData)) {
             return SDL_FALSE;
         }
 
@@ -592,9 +596,8 @@ static SDL_bool BReadDeviceInfo(SDL_DriverSwitch_Context *ctx)
 
         ctx->m_eControllerType = CalculateControllerType(ctx, (ESwitchDeviceInfoControllerType)status->ucDeviceType);
 
-        for (i = 0; i < sizeof(ctx->m_rgucMACAddress); ++i) {
-            ctx->m_rgucMACAddress[i] = status->rgucMACAddress[sizeof(ctx->m_rgucMACAddress) - i - 1];
-        }
+        for (i = 0; i < sizeof (ctx->m_rgucMACAddress); ++i)
+            ctx->m_rgucMACAddress[i] = status->rgucMACAddress[ sizeof(ctx->m_rgucMACAddress) - i - 1 ];
 
         return SDL_TRUE;
     }
@@ -773,14 +776,14 @@ static SDL_bool LoadStickCalibration(SDL_DriverSwitch_Context *ctx, Uint8 input_
     }
 
     for (stick = 0; stick < 2; ++stick) {
-        for (axis = 0; axis < 2; ++axis) {
+        for(axis = 0; axis < 2; ++axis) {
             ctx->m_StickExtents[stick].axis[axis].sMin = -(Sint16)(ctx->m_StickCalData[stick].axis[axis].sMin * 0.7f);
             ctx->m_StickExtents[stick].axis[axis].sMax = (Sint16)(ctx->m_StickCalData[stick].axis[axis].sMax * 0.7f);
         }
     }
 
     for (stick = 0; stick < 2; ++stick) {
-        for (axis = 0; axis < 2; ++axis) {
+        for(axis = 0; axis < 2; ++axis) {
             ctx->m_SimpleStickExtents[stick].axis[axis].sMin = (Sint16)(SDL_MIN_SINT16 * 0.5f);
             ctx->m_SimpleStickExtents[stick].axis[axis].sMax = (Sint16)(SDL_MAX_SINT16 * 0.5f);
         }
@@ -802,7 +805,7 @@ static SDL_bool LoadIMUCalibration(SDL_DriverSwitch_Context* ctx)
 
     if (!WriteSubcommand(ctx, k_eSwitchSubcommandIDs_SPIFlashRead, (uint8_t*)&readParams, sizeof(readParams), &reply)) {
         const float accelScale = SDL_STANDARD_GRAVITY / SWITCH_ACCEL_SCALE;
-        const float gyroScale = SDL_PI_F / 180.0f / SWITCH_GYRO_SCALE;
+        const float gyroScale = (float)M_PI / 180.0f / SWITCH_GYRO_SCALE;
 
         ctx->m_IMUScaleData.fAccelScaleX = accelScale;
         ctx->m_IMUScaleData.fAccelScaleY = accelScale;
@@ -847,9 +850,9 @@ static SDL_bool LoadIMUCalibration(SDL_DriverSwitch_Context* ctx)
     ctx->m_IMUScaleData.fAccelScaleZ = SWITCH_ACCEL_SCALE_MULT / (float)(SWITCH_ACCEL_SCALE_OFFSET - (float)sAccelRawZ) * SDL_STANDARD_GRAVITY;
 
     /* Gyro scale */
-    ctx->m_IMUScaleData.fGyroScaleX = SWITCH_GYRO_SCALE_MULT / (float)(SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawX) * SDL_PI_F / 180.0f;
-    ctx->m_IMUScaleData.fGyroScaleY = SWITCH_GYRO_SCALE_MULT / (float)(SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawY) * SDL_PI_F / 180.0f;
-    ctx->m_IMUScaleData.fGyroScaleZ = SWITCH_GYRO_SCALE_MULT / (float)(SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawZ) * SDL_PI_F / 180.0f;
+    ctx->m_IMUScaleData.fGyroScaleX = SWITCH_GYRO_SCALE_MULT / (float)(SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawX) * (float)M_PI / 180.0f;
+    ctx->m_IMUScaleData.fGyroScaleY = SWITCH_GYRO_SCALE_MULT / (float)(SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawY) * (float)M_PI / 180.0f;
+    ctx->m_IMUScaleData.fGyroScaleZ = SWITCH_GYRO_SCALE_MULT / (float)(SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawZ) * (float)M_PI / 180.0f;
 
     return SDL_TRUE;
 }
@@ -866,8 +869,7 @@ static Sint16 ApplyStickCalibration(SDL_DriverSwitch_Context *ctx, int nStick, i
         ctx->m_StickExtents[nStick].axis[nAxis].sMin = sRawValue;
     }
 
-    return (Sint16)HIDAPI_RemapVal(sRawValue, ctx->m_StickExtents[nStick].axis[nAxis].sMin, ctx->m_StickExtents[nStick].axis[nAxis].sMax,
-                                   SDL_MIN_SINT16, SDL_MAX_SINT16);
+    return (Sint16)HIDAPI_RemapVal(sRawValue, ctx->m_StickExtents[nStick].axis[nAxis].sMin, ctx->m_StickExtents[nStick].axis[nAxis].sMax, SDL_MIN_SINT16, SDL_MAX_SINT16);
 }
 
 static Sint16 ApplySimpleStickCalibration(SDL_DriverSwitch_Context *ctx, int nStick, int nAxis, Sint16 sRawValue)
@@ -884,8 +886,7 @@ static Sint16 ApplySimpleStickCalibration(SDL_DriverSwitch_Context *ctx, int nSt
         ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin = sRawValue;
     }
 
-    return (Sint16)HIDAPI_RemapVal(sRawValue, ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin, ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMax,
-                                   SDL_MIN_SINT16, SDL_MAX_SINT16);
+    return (Sint16)HIDAPI_RemapVal(sRawValue, ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin, ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMax, SDL_MIN_SINT16, SDL_MAX_SINT16);
 }
 
 static void SDLCALL SDL_GameControllerButtonReportingHintChanged(void *userdata, const char *name, const char *oldValue, const char *hint)
@@ -1050,7 +1051,9 @@ HIDAPI_DriverNintendoClassic_UnregisterHints(SDL_HintCallback callback, void *us
 static SDL_bool
 HIDAPI_DriverNintendoClassic_IsEnabled(void)
 {
-    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_NINTENDO_CLASSIC, SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI, SDL_HIDAPI_DEFAULT));
+    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_NINTENDO_CLASSIC,
+               SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI,
+                   SDL_HIDAPI_DEFAULT));
 }
 
 static SDL_bool
@@ -1094,7 +1097,9 @@ HIDAPI_DriverJoyCons_UnregisterHints(SDL_HintCallback callback, void *userdata)
 static SDL_bool
 HIDAPI_DriverJoyCons_IsEnabled(void)
 {
-    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS, SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI, SDL_HIDAPI_DEFAULT));
+    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS,
+               SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI,
+                   SDL_HIDAPI_DEFAULT));
 }
 
 static SDL_bool
@@ -1134,7 +1139,9 @@ HIDAPI_DriverSwitch_UnregisterHints(SDL_HintCallback callback, void *userdata)
 static SDL_bool
 HIDAPI_DriverSwitch_IsEnabled(void)
 {
-    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_SWITCH, SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI, SDL_HIDAPI_DEFAULT));
+    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_SWITCH,
+               SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI,
+                   SDL_HIDAPI_DEFAULT));
 }
 
 static SDL_bool
@@ -1225,7 +1232,7 @@ HIDAPI_DriverSwitch_InitDevice(SDL_HIDAPI_Device *device)
     SDL_DriverSwitch_Context *ctx;
 
     ctx = (SDL_DriverSwitch_Context *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
@@ -2135,7 +2142,7 @@ HIDAPI_DriverSwitch_UpdateDevice(SDL_HIDAPI_Device *device)
         ++packet_count;
         ctx->m_unLastInput = now;
 
-        if (joystick == NULL) {
+        if (!joystick) {
             continue;
         }
 
@@ -2194,7 +2201,7 @@ HIDAPI_DriverSwitch_UpdateDevice(SDL_HIDAPI_Device *device)
         /* Read error, device is disconnected */
         HIDAPI_JoystickDisconnected(device, device->joysticks[0]);
     }
-    return size >= 0;
+    return (size >= 0);
 }
 
 static void

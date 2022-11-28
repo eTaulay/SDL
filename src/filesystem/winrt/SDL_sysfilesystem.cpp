@@ -26,6 +26,11 @@
 #ifdef __WINRT__
 
 extern "C" {
+#include "SDL_filesystem.h"
+#include "SDL_error.h"
+#include "SDL_hints.h"
+#include "SDL_stdinc.h"
+#include "SDL_system.h"
 #include "../../core/windows/SDL_windows.h"
 }
 
@@ -106,7 +111,7 @@ SDL_WinRTGetFSPathUTF8(SDL_WinRT_Path pathType)
     }
 
     const wchar_t * ucs2Path = SDL_WinRTGetFSPathUNICODE(pathType);
-    if (ucs2Path == NULL) {
+    if (!ucs2Path) {
         return NULL;
     }
 
@@ -123,14 +128,14 @@ SDL_GetBasePath(void)
     size_t destPathLen;
     char * destPath = NULL;
 
-    if (srcPath == NULL) {
+    if (!srcPath) {
         SDL_SetError("Couldn't locate our basepath: %s", SDL_GetError());
         return NULL;
     }
 
     destPathLen = SDL_strlen(srcPath) + 2;
     destPath = (char *) SDL_malloc(destPathLen);
-    if (destPath == NULL) {
+    if (!destPath) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -156,16 +161,16 @@ SDL_GetPrefPath(const char *org, const char *app)
     size_t new_wpath_len = 0;
     BOOL api_result = FALSE;
 
-    if (app == NULL) {
+    if (!app) {
         SDL_InvalidParamError("app");
         return NULL;
     }
-    if (org == NULL) {
+    if (!org) {
         org = "";
     }
 
     srcPath = SDL_WinRTGetFSPathUNICODE(SDL_WINRT_PATH_LOCAL_FOLDER);
-    if (srcPath == NULL) {
+    if ( ! srcPath) {
         SDL_SetError("Unable to find a source path");
         return NULL;
     }

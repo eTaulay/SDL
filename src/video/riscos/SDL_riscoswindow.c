@@ -22,10 +22,11 @@
 
 #if SDL_VIDEO_DRIVER_RISCOS
 
+#include "SDL_version.h"
+#include "SDL_syswm.h"
 #include "../SDL_sysvideo.h"
 #include "../../events/SDL_mouse_c.h"
 
-#include <SDL3/SDL_syswm.h>
 
 #include "SDL_riscosvideo.h"
 #include "SDL_riscoswindow.h"
@@ -36,7 +37,7 @@ RISCOS_CreateWindow(_THIS, SDL_Window * window)
     SDL_WindowData *driverdata;
 
     driverdata = (SDL_WindowData *) SDL_calloc(1, sizeof(*driverdata));
-    if (driverdata == NULL) {
+    if (!driverdata) {
         return SDL_OutOfMemory();
     }
     driverdata->window = window;
@@ -55,19 +56,24 @@ RISCOS_DestroyWindow(_THIS, SDL_Window * window)
 {
     SDL_WindowData *driverdata = (SDL_WindowData *) window->driverdata;
 
-    if (driverdata == NULL) {
+    if (!driverdata)
         return;
-    }
 
     SDL_free(driverdata);
     window->driverdata = NULL;
 }
 
-int
-RISCOS_GetWindowWMInfo(_THIS, SDL_Window *window, struct SDL_SysWMinfo *info)
+SDL_bool
+RISCOS_GetWindowWMInfo(_THIS, SDL_Window * window, struct SDL_SysWMinfo *info)
 {
-    info->subsystem = SDL_SYSWM_RISCOS;
-    return 0;
+    if (info->version.major == SDL_MAJOR_VERSION) {
+        info->subsystem = SDL_SYSWM_RISCOS;
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Application not compiled with SDL %d",
+                     SDL_MAJOR_VERSION);
+        return SDL_FALSE;
+    }
 }
 
 #endif /* SDL_VIDEO_DRIVER_RISCOS */

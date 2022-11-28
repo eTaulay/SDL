@@ -22,6 +22,8 @@
 
 #if SDL_AUDIO_DRIVER_AAUDIO
 
+#include "SDL_audio.h"
+#include "SDL_loadso.h"
 #include "../SDL_audio_c.h"
 #include "../../core/android/SDL_android.h"
 #include "SDL_aaudio.h"
@@ -439,7 +441,7 @@ SDL_bool aaudio_DetectBrokenPlayState( void )
     int64_t framePosition, timeNanoseconds;
     aaudio_result_t res;
 
-    if (audioDevice == NULL || !audioDevice->hidden ) {
+    if ( !audioDevice || !audioDevice->hidden ) {
         return SDL_FALSE;
     }
 

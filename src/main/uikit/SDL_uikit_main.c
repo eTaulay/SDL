@@ -1,9 +1,11 @@
 /*
     SDL_uikit_main.c, placed in the public domain by Sam Lantinga  3/18/2019
 */
-#include <SDL3/SDL.h>
 
-#if defined(__IOS__) || defined(__TVOS__)
+/* Include the SDL main definition header */
+#include "SDL_main.h"
+
+#if defined(__IPHONEOS__) || defined(__TVOS__)
 
 #ifndef SDL_MAIN_HANDLED
 #ifdef main
@@ -17,6 +19,6 @@ main(int argc, char *argv[])
 }
 #endif /* !SDL_MAIN_HANDLED */
 
-#endif /* __IOS__ || __TVOS__ */
+#endif /* __IPHONEOS__ || __TVOS__ */
 
 /* vi: set ts=4 sw=4 expandtab: */

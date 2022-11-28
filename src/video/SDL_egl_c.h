@@ -25,7 +25,7 @@
 
 #if SDL_VIDEO_OPENGL_EGL
 
-#include <SDL3/SDL_egl.h>
+#include "SDL_egl.h"
 
 #include "SDL_sysvideo.h"
 
@@ -46,7 +46,7 @@ typedef struct SDL_EGL_VideoData
     EGLDisplay(EGLAPIENTRY *eglGetDisplay) (NativeDisplayType display);
     EGLDisplay(EGLAPIENTRY *eglGetPlatformDisplay) (EGLenum platform,
                                 void *native_display,
-                                const EGLAttrib *attrib_list);
+                                const EGLint *attrib_list);
     EGLDisplay(EGLAPIENTRY *eglGetPlatformDisplayEXT) (EGLenum platform,
                                 void *native_display,
                                 const EGLint *attrib_list);
@@ -132,7 +132,7 @@ extern int SDL_EGL_GetAttribute(_THIS, SDL_GLattr attrib, int *value);
  */
 extern int SDL_EGL_LoadLibraryOnly(_THIS, const char *path);
 extern int SDL_EGL_LoadLibrary(_THIS, const char *path, NativeDisplayType native_display, EGLenum platform);
-extern void *SDL_EGL_GetProcAddressInternal(_THIS, const char *proc);
+extern void *SDL_EGL_GetProcAddress(_THIS, const char *proc);
 extern void SDL_EGL_UnloadLibrary(_THIS);
 extern void SDL_EGL_SetRequiredVisualId(_THIS, int visual_id);
 extern int SDL_EGL_ChooseConfig(_THIS);

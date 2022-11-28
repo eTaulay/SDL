@@ -1,15 +1,5 @@
-/*
-  Copyright (C) 1997-2022 Sam Lantinga <slouken@libsdl.org>
-
-  This software is provided 'as-is', without any express or implied
-  warranty.  In no event will the authors be held liable for any damages
-  arising from the use of this software.
-
-  Permission is granted to anyone to use this software for any purpose,
-  including commercial applications, and to alter it and redistribute it
-  freely.
-*/
-#include <SDL3/SDL.h>
+#include <stdio.h>
+#include "SDL.h"
 
 /* !!! FIXME: rewrite this to be wired in to test framework. */
 
@@ -84,7 +74,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    while (!done) {
+    while (!done)
+    {
         SDL_Event e;
         int nothing_to_do = 1;
 
@@ -117,7 +108,7 @@ int main(int argc, char **argv)
                     if (e.key.keysym.sym == SDLK_ESCAPE) {
                         done = 1;
                     } else if (e.key.keysym.sym == SDLK_x) {
-                        if (areas == NULL) {
+                        if (!areas) {
                             areas = drag_areas;
                             numareas = SDL_arraysize(drag_areas);
                         } else {
@@ -141,5 +132,3 @@ int main(int argc, char **argv)
     SDL_Quit();
     return 0;
 }
-
-/* vi: set ts=4 sw=4 expandtab: */

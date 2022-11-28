@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "SDL_error.h"
+#include "SDL_log.h"
 #include "SDL_vitavideo.h"
 #include "SDL_vitagles_c.h"
 
@@ -136,7 +138,8 @@ VITA_GLES_CreateContext(_THIS, SDL_Window * window)
 
     EGLCHK(eglChooseConfig(display, attribs, &config, 1, &num_configs));
 
-    if (num_configs == 0) {
+    if (num_configs == 0)
+    {
         SDL_SetError("No valid EGL configs for requested mode");
         return 0;
     }

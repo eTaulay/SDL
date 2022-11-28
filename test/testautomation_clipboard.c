@@ -1,8 +1,12 @@
 /**
  * New/updated tests: aschiffler at ferzkopp dot net
  */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_test.h>
+
+#include <stdio.h>
+#include <string.h>
+
+#include "SDL.h"
+#include "SDL_test.h"
 
 /* ================= Test Case Implementation ================== */
 
@@ -330,5 +334,3 @@ SDLTest_TestSuiteReference clipboardTestSuite = {
     clipboardTests,
     NULL
 };
-
-/* vi: set ts=4 sw=4 expandtab: */

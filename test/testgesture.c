@@ -16,16 +16,15 @@
  *  l to load all touches from "./gestureSave"
  */
 
+#include "SDL.h"
 #include <stdlib.h> /* for exit() */
-
-#include <SDL3/SDL.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL_test.h>
-#include <SDL3/SDL_test_common.h>
+#include "SDL_test.h"
+#include "SDL_test_common.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -109,7 +108,7 @@ drawCircle(SDL_Surface *screen, float x, float y, float r, unsigned int c)
     for (ty = (float) -SDL_fabs(r); ty <= (float) SDL_fabs((int) r); ty++) {
         xr = (float) SDL_sqrt(r * r - ty * ty);
         if (r > 0) { /* r > 0 ==> filled circle */
-            for (tx = -xr + 0.5f; tx <= xr - 0.5f; tx++) {
+            for(tx = -xr + 0.5f; tx <= xr - 0.5f; tx++) {
                 setpix(screen, x + tx, y + ty, c);
             }
         } else {
@@ -133,7 +132,7 @@ DrawScreen(SDL_Window *window)
     SDL_Surface *screen = SDL_GetWindowSurface(window);
     int i;
 
-    if (screen == NULL) {
+    if (!screen) {
         return;
     }
 
@@ -273,7 +272,7 @@ loop(void)
 int main(int argc, char* argv[])
 {
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
 
@@ -299,4 +298,3 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-/* vi: set ts=4 sw=4 expandtab: */

@@ -22,6 +22,11 @@
 
 #ifdef SDL_JOYSTICK_HIDAPI
 
+#include "SDL_hints.h"
+#include "SDL_events.h"
+#include "SDL_timer.h"
+#include "SDL_joystick.h"
+#include "SDL_gamecontroller.h"
 #include "../../SDL_hints_c.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
@@ -73,7 +78,7 @@ HIDAPI_DriverPS3_IsEnabled(void)
 {
     SDL_bool default_value;
 
-#if defined(__MACOS__)
+#if defined(__MACOSX__)
     /* This works well on macOS */
     default_value = SDL_TRUE;
 #elif defined(__WINDOWS__)
@@ -140,7 +145,7 @@ HIDAPI_DriverPS3_InitDevice(SDL_HIDAPI_Device *device)
     }
 
     ctx = (SDL_DriverPS3_Context *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
@@ -223,7 +228,7 @@ HIDAPI_DriverPS3_SetDevicePlayerIndex(SDL_HIDAPI_Device *device, SDL_JoystickID 
 {
     SDL_DriverPS3_Context *ctx = (SDL_DriverPS3_Context *)device->context;
 
-    if (ctx == NULL) {
+    if (!ctx) {
         return;
     }
 
@@ -506,7 +511,7 @@ HIDAPI_DriverPS3_UpdateDevice(SDL_HIDAPI_Device *device)
 #ifdef DEBUG_PS3_PROTOCOL
         HIDAPI_DumpPacket("PS3 packet: size = %d", data, size);
 #endif
-        if (joystick == NULL) {
+        if (!joystick) {
             continue;
         }
 
@@ -548,7 +553,7 @@ HIDAPI_DriverPS3_UpdateDevice(SDL_HIDAPI_Device *device)
         /* Read error, device is disconnected */
         HIDAPI_JoystickDisconnected(device, device->joysticks[0]);
     }
-    return size >= 0;
+    return (size >= 0);
 }
 
 static void
@@ -629,7 +634,7 @@ HIDAPI_DriverPS3ThirdParty_InitDevice(SDL_HIDAPI_Device *device)
     SDL_DriverPS3_Context *ctx;
 
     ctx = (SDL_DriverPS3_Context *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
@@ -837,7 +842,7 @@ HIDAPI_DriverPS3ThirdParty_UpdateDevice(SDL_HIDAPI_Device *device)
 #ifdef DEBUG_PS3_PROTOCOL
         HIDAPI_DumpPacket("PS3 packet: size = %d", data, size);
 #endif
-        if (joystick == NULL) {
+        if (!joystick) {
             continue;
         }
 
@@ -854,7 +859,7 @@ HIDAPI_DriverPS3ThirdParty_UpdateDevice(SDL_HIDAPI_Device *device)
         /* Read error, device is disconnected */
         HIDAPI_JoystickDisconnected(device, device->joysticks[0]);
     }
-    return size >= 0;
+    return (size >= 0);
 }
 
 static void

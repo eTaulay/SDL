@@ -9,7 +9,8 @@
   including commercial applications, and to alter it and redistribute it
   freely.
 */
-#include <SDL3/SDL.h>
+#include <stdio.h>
+#include "SDL.h"
 
 static void
 print_devices(int iscapture)
@@ -56,7 +57,7 @@ main(int argc, char **argv)
     /* Load the SDL library */
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s\n", SDL_GetError());
-        return 1;
+        return (1);
     }
 
     /* Print available audio drivers */
@@ -101,5 +102,3 @@ main(int argc, char **argv)
     SDL_Quit();
     return 0;
 }
-
-/* vi: set ts=4 sw=4 expandtab: */

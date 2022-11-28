@@ -22,6 +22,8 @@
 
 #if SDL_VIDEO_DRIVER_X11
 
+#include "SDL_hints.h"
+#include "SDL_misc.h"
 #include "SDL_x11video.h"
 
 #include "../../events/SDL_keyboard_c.h"
@@ -432,7 +434,7 @@ X11_StopTextInput(_THIS)
 void
 X11_SetTextInputRect(_THIS, const SDL_Rect *rect)
 {
-    if (rect == NULL) {
+    if (!rect) {
         SDL_InvalidParamError("rect");
         return;
     }

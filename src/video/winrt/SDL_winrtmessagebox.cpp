@@ -23,6 +23,7 @@
 #if SDL_VIDEO_DRIVER_WINRT
 
 extern "C" {
+#include "SDL_messagebox.h"
 #include "../../core/windows/SDL_windows.h"
 }
 

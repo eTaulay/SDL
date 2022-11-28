@@ -26,6 +26,7 @@
 
 
 #include "SDL_yuv_sw_c.h"
+#include "SDL_cpuinfo.h"
 
 
 SDL_SW_YUVTexture *
@@ -48,7 +49,7 @@ SDL_SW_CreateYUVTexture(Uint32 format, int w, int h)
     }
 
     swdata = (SDL_SW_YUVTexture *) SDL_calloc(1, sizeof(*swdata));
-    if (swdata == NULL) {
+    if (!swdata) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -124,7 +125,7 @@ SDL_SW_CreateYUVTexture(Uint32 format, int w, int h)
     }
 
     /* We're all done.. */
-    return swdata;
+    return (swdata);
 }
 
 int
@@ -345,7 +346,8 @@ SDL_SW_LockYUVTexture(SDL_SW_YUVTexture * swdata, const SDL_Rect * rect,
         if (rect
             && (rect->x != 0 || rect->y != 0 || rect->w != swdata->w
                 || rect->h != swdata->h)) {
-            return SDL_SetError("YV12, IYUV, NV12, NV21 textures only support full surface locks");
+            return SDL_SetError
+                ("YV12, IYUV, NV12, NV21 textures only support full surface locks");
         }
         break;
     }
@@ -405,7 +407,7 @@ SDL_SW_CopyYUVToRGB(SDL_SW_YUVTexture * swdata, const SDL_Rect * srcrect,
                 SDL_CreateRGBSurfaceFrom(pixels, w, h, bpp, pitch, Rmask,
                                          Gmask, Bmask, Amask);
             if (!swdata->display) {
-                return -1;
+                return (-1);
             }
         }
         if (!swdata->stretch) {
@@ -416,7 +418,7 @@ SDL_SW_CopyYUVToRGB(SDL_SW_YUVTexture * swdata, const SDL_Rect * srcrect,
                 SDL_CreateRGBSurface(0, swdata->w, swdata->h, bpp, Rmask,
                                      Gmask, Bmask, Amask);
             if (!swdata->stretch) {
-                return -1;
+                return (-1);
             }
         }
         pixels = swdata->stretch->pixels;

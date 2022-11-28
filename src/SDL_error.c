@@ -22,6 +22,7 @@
 
 /* Simple error handling in SDL */
 
+#include "SDL_error.h"
 #include "SDL_error_c.h"
 
 int

@@ -12,13 +12,15 @@
 /* Simple program:  Check viewports */
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL_test.h>
-#include <SDL3/SDL_test_common.h>
+#include "SDL_test.h"
+#include "SDL_test_common.h"
 #include "testutils.h"
 
 static SDLTest_CommonState *state;
@@ -101,9 +103,8 @@ loop()
     int i;
 #ifdef __EMSCRIPTEN__
     /* Avoid using delays */
-    if (SDL_GetTicks() - wait_start < 1000) {
+    if(SDL_GetTicks() - wait_start < 1000)
         return;
-    }
     wait_start = SDL_GetTicks();
 #endif
     /* Check for events */
@@ -120,9 +121,8 @@ loop()
     SDL_Log("Current Viewport x=%i y=%i w=%i h=%i", viewport.x, viewport.y, viewport.w, viewport.h);
 
     for (i = 0; i < state->num_windows; ++i) {
-        if (state->windows[i] == NULL) {
+        if (state->windows[i] == NULL)
             continue;
-        }
 
         /* Draw using viewport */
         DrawOnViewport(state->renderers[i]);
@@ -153,7 +153,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
 

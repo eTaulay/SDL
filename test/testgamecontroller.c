@@ -12,12 +12,18 @@
 
 /* Simple program to test the SDL game controller routines */
 
-#include <SDL3/SDL.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "SDL.h"
 #include "testutils.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
+
+#ifndef SDL_JOYSTICK_DISABLED
 
 #define SCREEN_WIDTH    512
 #define SCREEN_HEIGHT   320
@@ -92,7 +98,7 @@ static SDL_GameControllerButton virtual_button_active = SDL_CONTROLLER_BUTTON_IN
 
 static void UpdateWindowTitle()
 {
-    if (window == NULL) {
+    if (!window) {
         return;
     }
 
@@ -184,13 +190,13 @@ static void AddController(int device_index, SDL_bool verbose)
     }
 
     controller = SDL_GameControllerOpen(device_index);
-    if (controller == NULL) {
+    if (!controller) {
         SDL_Log("Couldn't open controller: %s\n", SDL_GetError());
         return;
     }
 
     controllers = (SDL_GameController **)SDL_realloc(gamecontrollers, (num_controllers + 1) * sizeof(*controllers));
-    if (controllers == NULL) {
+    if (!controllers) {
         SDL_GameControllerClose(controller);
         return;
     }
@@ -397,7 +403,7 @@ static void OpenVirtualController()
         SDL_Log("Couldn't open virtual device: %s\n", SDL_GetError());
     } else {
         virtual_joystick = SDL_JoystickOpen(virtual_index);
-        if (virtual_joystick == NULL) {
+        if (!virtual_joystick) {
             SDL_Log("Couldn't open virtual device: %s\n", SDL_GetError());
         }
     }
@@ -906,7 +912,7 @@ main(int argc, char *argv[])
     button_texture = LoadTexture(screen, "button.bmp", SDL_TRUE, NULL, NULL);
     axis_texture = LoadTexture(screen, "axis.bmp", SDL_TRUE, NULL, NULL);
 
-    if (background_front == NULL || background_back == NULL || button_texture == NULL || axis_texture == NULL) {
+    if (!background_front || !background_back || !button_texture || !axis_texture) {
         SDL_DestroyRenderer(screen);
         SDL_DestroyWindow(window);
         return 2;
@@ -955,5 +961,16 @@ main(int argc, char *argv[])
 
     return 0;
 }
+
+#else
+
+int
+main(int argc, char *argv[])
+{
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL compiled without Joystick support.\n");
+    return 1;
+}
+
+#endif
 
 /* vi: set ts=4 sw=4 expandtab: */

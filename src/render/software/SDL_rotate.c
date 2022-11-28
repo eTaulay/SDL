@@ -39,6 +39,7 @@ Andreas Schiffler -- aschiffler at ferzkopp dot net
 #include <stdlib.h>
 #include <string.h>
 
+#include "SDL.h"
 #include "SDL_rotate.h"
 
 /* ---- Internally used structures */
@@ -121,7 +122,7 @@ SDLgfx_rotozoomSurfaceSizeTrig(int width, int height, double angle, const SDL_FP
     double sinangle;
     double cosangle;
 
-    radangle = angle * (SDL_PI_D / 180.0);
+    radangle = angle * (M_PI / 180.0);
     sinangle = SDL_sin(radangle);
     cosangle = SDL_cos(radangle);
 
@@ -151,13 +152,10 @@ SDLgfx_rotozoomSurfaceSizeTrig(int width, int height, double angle, const SDL_FP
     {
         /* The trig code below gets the wrong size (due to FP inaccuracy?) when angle is a multiple of 90 degrees */
         int angle90 = (int)(angle/90);
-        if (angle90 == angle/90) { /* if the angle is a multiple of 90 degrees */
+        if(angle90 == angle/90) { /* if the angle is a multiple of 90 degrees */
             angle90 %= 4;
-            if (angle90 < 0) {
-                angle90 += 4; /* 0:0 deg, 1:90 deg, 2:180 deg, 3:270 deg */
-            }
-
-            if (angle90 & 1) {
+            if(angle90 < 0) angle90 += 4; /* 0:0 deg, 1:90 deg, 2:180 deg, 3:270 deg */
+            if(angle90 & 1) {
                 rect_dest->w  = height;
                 rect_dest->h = width;
                 *cangle = 0;
@@ -286,12 +284,8 @@ transformSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int isin, int icos,
             for (x = 0; x < dst->w; x++) {
                 int dx = (sdx >> 16);
                 int dy = (sdy >> 16);
-                if (flipx) {
-                    dx = sw - dx;
-                }
-                if (flipy) {
-                    dy = sh - dy;
-                }
+                if (flipx) dx = sw - dx;
+                if (flipy) dy = sh - dy;
                 if ((dx > -1) && (dy > -1) && (dx < (src->w-1)) && (dy < (src->h-1))) {
                     int ex, ey;
                     int t1, t2;
@@ -347,12 +341,8 @@ transformSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int isin, int icos,
                 int dx = (sdx >> 16);
                 int dy = (sdy >> 16);
                 if ((unsigned)dx < (unsigned)src->w && (unsigned)dy < (unsigned)src->h) {
-                    if (flipx) {
-                        dx = sw - dx;
-                    }
-                    if (flipy) {
-                        dy = sh - dy;
-                    }
+                    if(flipx) dx = sw - dx;
+                    if(flipy) dy = sh - dy;
                     *pc = *((tColorRGBA *)((Uint8 *)src->pixels + src->pitch * dy) + dx);
                 }
                 sdx += icos;
@@ -421,12 +411,8 @@ transformSurfaceY(SDL_Surface * src, SDL_Surface * dst, int isin, int icos, int 
             int dx = (sdx >> 16);
             int dy = (sdy >> 16);
             if ((unsigned)dx < (unsigned)src->w && (unsigned)dy < (unsigned)src->h) {
-                if (flipx) {
-                    dx = sw - dx;
-                }
-                if (flipy) {
-                    dy = sh - dy;
-                }
+                if (flipx) dx = sw - dx;
+                if (flipy) dy = sh- dy;
                 *pc = *((tColorY *)src->pixels + src->pitch * dy + dx);
             }
             sdx += icos;
@@ -477,9 +463,8 @@ SDLgfx_rotateSurface(SDL_Surface * src, double angle, int smooth, int flipx, int
     double sangleinv, cangleinv;
 
     /* Sanity check */
-    if (src == NULL) {
+    if (src == NULL)
         return NULL;
-    }
 
     if (SDL_HasColorKey(src)) {
         if (SDL_GetColorKey(src, &colorkey) == 0) {
@@ -488,9 +473,8 @@ SDLgfx_rotateSurface(SDL_Surface * src, double angle, int smooth, int flipx, int
     }
     /* This function requires a 32-bit surface or 8-bit surface with a colorkey */
     is8bit = src->format->BitsPerPixel == 8 && colorKeyAvailable;
-    if (!(is8bit || (src->format->BitsPerPixel == 32 && src->format->Amask))) {
+    if (!(is8bit || (src->format->BitsPerPixel == 32 && src->format->Amask)))
         return NULL;
-    }
 
     /* Calculate target factors from sine/cosine and zoom */
     sangleinv = sangle*65536.0;
@@ -517,9 +501,8 @@ SDLgfx_rotateSurface(SDL_Surface * src, double angle, int smooth, int flipx, int
     }
 
     /* Check target */
-    if (rz_dst == NULL) {
+    if (rz_dst == NULL)
         return NULL;
-    }
 
     /* Adjust for guard rows */
     rz_dst->h = rect_dest->h;
@@ -559,17 +542,14 @@ SDLgfx_rotateSurface(SDL_Surface * src, double angle, int smooth, int flipx, int
     angle90 = (int)(angle/90);
     if (angle90 == angle/90) {
         angle90 %= 4;
-        if (angle90 < 0) {
-            angle90 += 4; /* 0:0 deg, 1:90 deg, 2:180 deg, 3:270 deg */
-        }
-
+        if (angle90 < 0) angle90 += 4; /* 0:0 deg, 1:90 deg, 2:180 deg, 3:270 deg */
     } else {
         angle90 = -1;
     }
 
     if (is8bit) {
         /* Call the 8-bit transformation routine to do the rotation */
-        if (angle90 >= 0) {
+        if(angle90 >= 0) {
             transformSurfaceY90(src, rz_dst, angle90, flipx, flipy);
         } else {
             transformSurfaceY(src, rz_dst, (int)sangleinv, (int)cangleinv,

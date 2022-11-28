@@ -22,6 +22,10 @@
 
 #ifdef SDL_JOYSTICK_WGI
 
+#include "SDL_assert.h"
+#include "SDL_atomic.h"
+#include "SDL_endian.h"
+#include "SDL_events.h"
 #include "../SDL_sysjoystick.h"
 #include "../hidapi/SDL_hidapijoystick_c.h"
 #include "SDL_rawinputjoystick_c.h"
@@ -212,7 +216,7 @@ typedef struct RawGameControllerDelegate {
 
 static HRESULT STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_QueryInterface(__FIEventHandler_1_Windows__CGaming__CInput__CRawGameController * This, REFIID riid, void **ppvObject)
 {
-    if (ppvObject == NULL) {
+    if (!ppvObject) {
         return E_INVALIDARG;
     }
 
@@ -302,7 +306,7 @@ static HRESULT STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_InvokeAdde
             }
             __x_ABI_CWindows_CGaming_CInput_CIRawGameController2_Release(controller2);
         }
-        if (name == NULL) {
+        if (!name) {
             name = SDL_strdup("");
         }
 
@@ -660,7 +664,7 @@ WGI_JoystickOpen(SDL_Joystick *joystick, int device_index)
     boolean wireless = SDL_FALSE;
 
     hwdata = (struct joystick_hwdata *)SDL_calloc(1, sizeof(*hwdata));
-    if (hwdata == NULL) {
+    if (!hwdata) {
         return SDL_OutOfMemory();
     }
     joystick->hwdata = hwdata;

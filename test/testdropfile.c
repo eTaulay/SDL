@@ -11,8 +11,9 @@
 */
 
 #include <stdlib.h>
+#include <stdio.h>
 
-#include <SDL3/SDL_test_common.h>
+#include "SDL_test_common.h"
 
 static SDLTest_CommonState *state;
 
@@ -35,7 +36,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
 
@@ -43,7 +44,7 @@ main(int argc, char *argv[])
         int consumed;
 
         consumed = SDLTest_CommonArg(state, i);
-        /* needed voodoo to allow app to launch via macOS Finder */
+        /* needed voodoo to allow app to launch via OS X Finder */
         if (SDL_strncmp(argv[i], "-psn", 4)==0) {
             consumed = 1;
         }
@@ -92,7 +93,7 @@ main(int argc, char *argv[])
 
     quit(0);
     /* keep the compiler happy ... */
-    return 0;
+    return(0);
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

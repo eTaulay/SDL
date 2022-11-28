@@ -20,8 +20,13 @@
 */
 #include "../../SDL_internal.h"
 
+#include "SDL_config.h"
+
 #if defined(SDL_SENSOR_WINDOWS)
 
+#include "SDL_error.h"
+#include "SDL_mutex.h"
+#include "SDL_sensor.h"
 #include "SDL_windowssensor.h"
 #include "../SDL_syssensor.h"
 #include "../../core/windows/SDL_windows.h"
@@ -62,7 +67,7 @@ static int DisconnectSensor(ISensor *sensor);
 
 static HRESULT STDMETHODCALLTYPE ISensorManagerEventsVtbl_QueryInterface(ISensorManagerEvents * This, REFIID riid, void **ppvObject)
 {
-    if (ppvObject == NULL) {
+    if (!ppvObject) {
         return E_INVALIDARG;
     }
 
@@ -102,7 +107,7 @@ static ISensorManagerEvents sensor_manager_events = {
 
 static HRESULT STDMETHODCALLTYPE ISensorEventsVtbl_QueryInterface(ISensorEvents * This, REFIID riid, void **ppvObject)
 {
-    if (ppvObject == NULL) {
+    if (!ppvObject) {
         return E_INVALIDARG;
     }
 
@@ -175,7 +180,7 @@ static HRESULT STDMETHODCALLTYPE ISensorEventsVtbl_OnDataUpdated(ISensorEvents *
                     hrZ = ISensorDataReport_GetSensorValue(pNewData, &SDL_SENSOR_DATA_TYPE_ANGULAR_VELOCITY_Z_DEGREES_PER_SECOND, &valueZ);
                     if (SUCCEEDED(hrX) && SUCCEEDED(hrY) && SUCCEEDED(hrZ) &&
                         valueX.vt == VT_R8 && valueY.vt == VT_R8 && valueZ.vt == VT_R8) {
-                        const float DEGREES_TO_RADIANS = (SDL_PI_F / 180.0f);
+                        const float DEGREES_TO_RADIANS = (float)(M_PI / 180.0f);
                         float values[3];
 
                         values[0] = (float)valueX.dblVal * DEGREES_TO_RADIANS;
@@ -281,7 +286,7 @@ static int ConnectSensor(ISensor *sensor)
     if (bstr_name != NULL) {
         SysFreeString(bstr_name);
     }
-    if (name == NULL) {
+    if (!name) {
         return SDL_OutOfMemory();
     }
 

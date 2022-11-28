@@ -23,6 +23,7 @@
 #if SDL_VIDEO_DRIVER_COCOA
 
 #include "SDL_cocoavideo.h"
+#include "SDL_shape.h"
 #include "SDL_cocoashape.h"
 #include "../SDL_sysvideo.h"
 

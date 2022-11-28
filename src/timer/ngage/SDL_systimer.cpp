@@ -25,6 +25,7 @@
 #include <e32std.h>
 #include <e32hal.h>
 
+#include "SDL_timer.h"
 
 static SDL_bool ticks_started = SDL_FALSE;
 static TUint    start         = 0;
@@ -37,7 +38,8 @@ extern "C" {
 void
 SDL_TicksInit(void)
 {
-    if (ticks_started) {
+    if (ticks_started)
+    {
         return;
     }
     ticks_started = SDL_TRUE;
@@ -60,7 +62,8 @@ SDL_TicksQuit(void)
 Uint64
 SDL_GetTicks64(void)
 {
-    if (! ticks_started) {
+    if (! ticks_started)
+    {
         SDL_TicksInit();
     }
 

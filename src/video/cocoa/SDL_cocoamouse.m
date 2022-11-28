@@ -22,6 +22,7 @@
 
 #if SDL_VIDEO_DRIVER_COCOA
 
+#include "SDL_events.h"
 #include "SDL_cocoamouse.h"
 #include "SDL_cocoavideo.h"
 
@@ -266,7 +267,7 @@ Cocoa_WarpMouseGlobal(int x, int y)
 
     /* CGWarpMouse causes a short delay by default, which is preventable by
      * Calling this directly after. CGSetLocalEventsSuppressionInterval can also
-     * prevent it, but it's deprecated as macOS 10.6.
+     * prevent it, but it's deprecated as of OS X 10.6.
      */
     if (!mouse->relative_mode) {
         CGAssociateMouseAndMouseCursorPosition(YES);

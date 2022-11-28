@@ -174,7 +174,7 @@ WIN_GetDisplayMode(_THIS, LPCWSTR deviceName, DWORD index, SDL_DisplayMode * mod
     }
 
     data = (SDL_DisplayModeData *) SDL_malloc(sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         return SDL_FALSE;
     }
 
@@ -217,7 +217,7 @@ WIN_GetDisplayNameVista(const WCHAR *deviceName)
     LONG rc;
 
     dll = SDL_LoadObject("USER32.DLL");
-    if (dll == NULL) {
+    if (!dll) {
         return NULL;
     }
 
@@ -225,7 +225,7 @@ WIN_GetDisplayNameVista(const WCHAR *deviceName)
     pQueryDisplayConfig = (SDL_WIN32PROC_QueryDisplayConfig) SDL_LoadFunction(dll, "QueryDisplayConfig");
     pDisplayConfigGetDeviceInfo = (SDL_WIN32PROC_DisplayConfigGetDeviceInfo) SDL_LoadFunction(dll, "DisplayConfigGetDeviceInfo");
 
-    if (pGetDisplayConfigBufferSizes == NULL || pQueryDisplayConfig == NULL || pDisplayConfigGetDeviceInfo == NULL) {
+    if (!pGetDisplayConfigBufferSizes || !pQueryDisplayConfig || !pDisplayConfigGetDeviceInfo) {
         goto WIN_GetDisplayNameVista_failed;
     }
 
@@ -316,7 +316,7 @@ WIN_AddDisplay(_THIS, HMONITOR hMonitor, const MONITORINFOEXW *info, SDL_bool se
     // Prevent adding duplicate displays. Do this after we know the display is
     // ready to be added to allow any displays that we can't fully query to be
     // removed
-    for (i = 0; i < _this->num_displays; ++i) {
+    for(i = 0; i < _this->num_displays; ++i) {
         SDL_DisplayData *driverdata = (SDL_DisplayData *)_this->displays[i].driverdata;
         if (SDL_wcscmp(driverdata->DeviceName, info->szDevice) == 0) {
             driverdata->MonitorHandle = hMonitor;
@@ -333,7 +333,7 @@ WIN_AddDisplay(_THIS, HMONITOR hMonitor, const MONITORINFOEXW *info, SDL_bool se
     }
 
     displaydata = (SDL_DisplayData *) SDL_calloc(1, sizeof(*displaydata));
-    if (displaydata == NULL) {
+    if (!displaydata) {
         return SDL_FALSE;
     }
     SDL_memcpy(displaydata->DeviceName, info->szDevice, sizeof(displaydata->DeviceName));
@@ -583,7 +583,7 @@ void WIN_ScreenPointFromSDL(int *x, int *y, int *dpiOut)
         *dpiOut = 96;
     }
 
-    if (videodevice == NULL || !videodevice->driverdata) {
+    if (!videodevice || !videodevice->driverdata) {
         return;
     }
 
@@ -637,7 +637,7 @@ void WIN_ScreenPointToSDL(int *x, int *y)
     float ddpi, hdpi, vdpi;
     int x_pixels, y_pixels;
 
-    if (videodevice == NULL || !videodevice->driverdata) {
+    if (!videodevice || !videodevice->driverdata) {
         return;
     }
 

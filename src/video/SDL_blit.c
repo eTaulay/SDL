@@ -20,6 +20,7 @@
 */
 #include "../SDL_internal.h"
 
+#include "SDL_video.h"
 #include "SDL_sysvideo.h"
 #include "SDL_blit.h"
 #include "SDL_blit_auto.h"
@@ -95,12 +96,12 @@ SDL_SoftBlit(SDL_Surface * src, SDL_Rect * srcrect,
         SDL_UnlockSurface(src);
     }
     /* Blit is done! */
-    return okay ? 0 : -1;
+    return (okay ? 0 : -1);
 }
 
 #if SDL_HAVE_BLIT_AUTO
 
-#ifdef __MACOS__
+#ifdef __MACOSX__
 #include <sys/sysctl.h>
 
 static SDL_bool
@@ -123,7 +124,7 @@ SDL_UseAltivecPrefetch()
     /* Just guess G4 */
     return SDL_TRUE;
 }
-#endif /* __MACOS__ */
+#endif /* __MACOSX__ */
 
 static SDL_BlitFunc
 SDL_ChooseBlitFunc(Uint32 src_format, Uint32 dst_format, int flags,

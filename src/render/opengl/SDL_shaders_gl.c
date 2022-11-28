@@ -22,7 +22,9 @@
 
 #if SDL_VIDEO_RENDER_OGL && !SDL_RENDER_DISABLED
 
-#include <SDL3/SDL_opengl.h>
+#include "SDL_stdinc.h"
+#include "SDL_opengl.h"
+#include "SDL_video.h"
 #include "SDL_shaders_gl.h"
 
 /* OpenGL shader implementation */
@@ -477,7 +479,7 @@ CompileShaderProgram(GL_ShaderContext *ctx, int index, GL_ShaderData *data)
     }
     ctx->glUseProgramObjectARB(0);
 
-    return ctx->glGetError() == GL_NO_ERROR;
+    return (ctx->glGetError() == GL_NO_ERROR);
 }
 
 static void
@@ -496,7 +498,7 @@ GL_CreateShaderContext(void)
     int i;
 
     ctx = (GL_ShaderContext *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         return NULL;
     }
 

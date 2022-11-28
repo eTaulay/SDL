@@ -13,9 +13,10 @@
 /* Simple program:  Test relative mouse motion */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 
-#include <SDL3/SDL_test_common.h>
+#include "SDL_test_common.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
@@ -34,7 +35,7 @@ DrawRects(SDL_Renderer * renderer)
 }
 
 static void
-loop() {
+loop(){
     /* Check for events */
     while (SDL_PollEvent(&event)) {
         SDLTest_CommonEvent(state, &event, &done);
@@ -50,26 +51,17 @@ loop() {
     for (i = 0; i < state->num_windows; ++i) {
         SDL_Rect viewport;
         SDL_Renderer *renderer = state->renderers[i];
-        if (state->windows[i] == NULL) {
+        if (state->windows[i] == NULL)
             continue;
-        }
         SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
         SDL_RenderClear(renderer);
 
         /* Wrap the cursor rectangle at the screen edges to keep it visible */
         SDL_RenderGetViewport(renderer, &viewport);
-        if (rect.x < viewport.x) {
-            rect.x += viewport.w;
-        }
-        if (rect.y < viewport.y) {
-            rect.y += viewport.h;
-        }
-        if (rect.x > viewport.x + viewport.w) {
-            rect.x -= viewport.w;
-        }
-        if (rect.y > viewport.y + viewport.h) {
-            rect.y -= viewport.h;
-        }
+        if (rect.x < viewport.x) rect.x += viewport.w;
+        if (rect.y < viewport.y) rect.y += viewport.h;
+        if (rect.x > viewport.x + viewport.w) rect.x -= viewport.w;
+        if (rect.y > viewport.y + viewport.h) rect.y -= viewport.h;
 
         DrawRects(renderer);
 
@@ -91,7 +83,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
     for (i = 1; i < argc; ++i) {
@@ -110,7 +102,7 @@ main(int argc, char *argv[])
     }
 
     srand((unsigned int)time(NULL));
-    if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
+    if(SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
         return 3;
     }
 

@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h> /* For close() */
 
+#include "SDL_stdinc.h"
 #include "SDL_audiodev_c.h"
 
 #ifndef _PATH_DEV_DSP
@@ -83,9 +84,8 @@ SDL_EnumUnixAudioDevices_Internal(const int iscapture, const int classic, int (*
     const char *audiodev;
     char audiopath[1024];
 
-    if (test == NULL) {
+    if (test == NULL)
         test = test_stub;
-    }
 
     /* Figure out what our audio device is */
     if (((audiodev = SDL_getenv("SDL_PATH_DSP")) == NULL) &&

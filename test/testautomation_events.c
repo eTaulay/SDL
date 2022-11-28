@@ -1,8 +1,11 @@
 /**
  * Events test suite
  */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_test.h>
+
+#include <stdio.h>
+
+#include "SDL.h"
+#include "SDL_test.h"
 
 /* ================= Test Case Implementation ================== */
 
@@ -196,5 +199,3 @@ SDLTest_TestSuiteReference eventsTestSuite = {
     eventsTests,
     NULL
 };
-
-/* vi: set ts=4 sw=4 expandtab: */

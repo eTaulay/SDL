@@ -23,7 +23,12 @@
 #ifdef SDL_JOYSTICK_ANDROID
 
 #include <stdio.h>              /* For the definition of NULL */
+#include "SDL_error.h"
+#include "SDL_events.h"
 
+#include "SDL_joystick.h"
+#include "SDL_hints.h"
+#include "SDL_timer.h"
 #include "SDL_sysjoystick_c.h"
 #include "../SDL_joystick_c.h"
 #include "../../events/SDL_keyboard_c.h"
@@ -615,7 +620,7 @@ ANDROID_JoystickOpen(SDL_Joystick *joystick, int device_index)
     joystick->nbuttons = item->nbuttons;
     joystick->naxes = item->naxes;
 
-    return 0;
+    return (0);
 }
 
 static int

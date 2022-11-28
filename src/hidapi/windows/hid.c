@@ -21,6 +21,7 @@
 ********************************************************/
 #include "../../SDL_internal.h"
 
+#include "SDL_hints.h"
 
 #include <windows.h>
 
@@ -86,6 +87,7 @@ extern "C" {
 /*#include <stdlib.h>*/
 
 /* SDL C runtime functions */
+#include "SDL_stdinc.h"
 
 #define calloc SDL_calloc
 #define free SDL_free

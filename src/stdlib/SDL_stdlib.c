@@ -27,6 +27,7 @@
 
 /* This file contains portable stdlib functions for SDL */
 
+#include "SDL_stdinc.h"
 #include "../libm/math_libm.h"
 
 
@@ -78,12 +79,12 @@ SDL_acos(double val)
 #else
     double result;
     if (val == -1.0) {
-        result = SDL_PI_D;
+        result = M_PI;
     } else {
         result = SDL_atan(SDL_sqrt(1.0 - val * val) / val);
         if (result < 0.0)
         {
-            result += SDL_PI_D;
+            result += M_PI;
         }
     }
     return result;
@@ -108,9 +109,9 @@ SDL_asin(double val)
 #else
     double result;
     if (val == -1.0) {
-        result = -(SDL_PI_D / 2.0);
+        result = -(M_PI / 2.0);
     } else {
-        result = (SDL_PI_D / 2.0) - SDL_acos(val);
+        result = (M_PI / 2.0) - SDL_acos(val);
     }
     return result;
 #endif
@@ -634,39 +635,6 @@ SDL_memset(SDL_OUT_BYTECAP(len) void *dst, int c, size_t len)
 
     return dst;
 #endif /* HAVE_MEMSET */
-}
-
-/* Note that memset() is a byte assignment and this is a 32-bit assignment, so they're not directly equivalent. */
-void *
-SDL_memset4(void *dst, Uint32 val, size_t dwords)
-{
-#if defined(__APPLE__) && defined(HAVE_STRING_H)
-    memset_pattern4(dst, &val, dwords * 4);
-#elif defined(__GNUC__) && defined(__i386__)
-    int u0, u1, u2;
-    __asm__ __volatile__ (
-        "cld \n\t"
-        "rep ; stosl \n\t"
-        : "=&D" (u0), "=&a" (u1), "=&c" (u2)
-        : "0" (dst), "1" (val), "2" (SDL_static_cast(Uint32, dwords))
-        : "memory"
-    );
-#else
-    size_t _n = (dwords + 3) / 4;
-    Uint32 *_p = SDL_static_cast(Uint32 *, dst);
-    Uint32 _val = (val);
-    if (dwords == 0) {
-        return dst;
-    }
-    switch (dwords % 4) {
-        case 0: do {    *_p++ = _val;   SDL_FALLTHROUGH;
-        case 3:         *_p++ = _val;   SDL_FALLTHROUGH;
-        case 2:         *_p++ = _val;   SDL_FALLTHROUGH;
-        case 1:         *_p++ = _val;
-        } while ( --_n );
-    }
-#endif
-    return dst;
 }
 
 #if defined(HAVE_CTYPE_H) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L

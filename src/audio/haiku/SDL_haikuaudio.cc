@@ -32,6 +32,7 @@
 extern "C"
 {
 
+#include "SDL_audio.h"
 #include "../SDL_audio_c.h"
 #include "../SDL_sysaudio.h"
 #include "SDL_haikuaudio.h"

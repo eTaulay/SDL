@@ -24,7 +24,9 @@
 
 #include <limits.h> /* For INT_MAX */
 
+#include "SDL_events.h"
 #include "SDL_x11video.h"
+#include "SDL_timer.h"
 #include "SDL_x11clipboard.h"
 
 /* Get any application owned window handle for clipboard association */
@@ -215,7 +217,7 @@ GetSlectionText(_THIS, Atom selection_type)
         X11_XFree(src);
     }
 
-    if (text == NULL) {
+    if (!text) {
         text = SDL_strdup("");
     }
 

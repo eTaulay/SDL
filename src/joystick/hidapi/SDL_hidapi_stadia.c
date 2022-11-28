@@ -22,6 +22,9 @@
 
 #ifdef SDL_JOYSTICK_HIDAPI
 
+#include "SDL_events.h"
+#include "SDL_joystick.h"
+#include "SDL_gamecontroller.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
 #include "SDL_hidapi_rumble.h"
@@ -59,7 +62,9 @@ HIDAPI_DriverStadia_UnregisterHints(SDL_HintCallback callback, void *userdata)
 static SDL_bool
 HIDAPI_DriverStadia_IsEnabled(void)
 {
-    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_STADIA, SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI, SDL_HIDAPI_DEFAULT));
+    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_STADIA,
+               SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI,
+                   SDL_HIDAPI_DEFAULT));
 }
 
 static SDL_bool
@@ -74,7 +79,7 @@ HIDAPI_DriverStadia_InitDevice(SDL_HIDAPI_Device *device)
     SDL_DriverStadia_Context *ctx;
 
     ctx = (SDL_DriverStadia_Context *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
@@ -278,7 +283,7 @@ HIDAPI_DriverStadia_UpdateDevice(SDL_HIDAPI_Device *device)
 #ifdef DEBUG_STADIA_PROTOCOL
         HIDAPI_DumpPacket("Google Stadia packet: size = %d", data, size);
 #endif
-        if (joystick == NULL) {
+        if (!joystick) {
             continue;
         }
 
@@ -289,7 +294,7 @@ HIDAPI_DriverStadia_UpdateDevice(SDL_HIDAPI_Device *device)
         /* Read error, device is disconnected */
         HIDAPI_JoystickDisconnected(device, device->joysticks[0]);
     }
-    return size >= 0;
+    return (size >= 0);
 }
 
 static void

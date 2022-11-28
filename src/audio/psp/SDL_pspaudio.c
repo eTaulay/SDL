@@ -27,6 +27,9 @@
 #include <stdlib.h>
 #include <malloc.h> /* memalign() */
 
+#include "SDL_audio.h"
+#include "SDL_error.h"
+#include "SDL_timer.h"
 #include "../SDL_audio_c.h"
 #include "../SDL_audiodev_c.h"
 #include "../SDL_sysaudio.h"
@@ -102,7 +105,7 @@ PSPAUDIO_OpenDevice(_THIS, const char *devname)
 
 static void PSPAUDIO_PlayDevice(_THIS)
 {
-    if (this->spec.freq != 44100) {
+    if (this->spec.freq != 44100){
         Uint8 *mixbuf = this->hidden->mixbufs[this->hidden->next_buffer];
         SDL_assert(this->spec.channels == 2);
         sceAudioSRCOutputBlocking(PSP_AUDIO_VOLUME_MAX, mixbuf);
@@ -128,7 +131,7 @@ static Uint8 *PSPAUDIO_GetDeviceBuf(_THIS)
 static void PSPAUDIO_CloseDevice(_THIS)
 {
     if (this->hidden->channel >= 0) {
-        if (this->spec.freq != 44100) {
+        if (this->spec.freq != 44100){
             sceAudioSRCChRelease();
         } else {
             sceAudioChRelease(this->hidden->channel);

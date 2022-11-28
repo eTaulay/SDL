@@ -27,6 +27,9 @@
 
 #include <unistd.h>
 
+#include "SDL_error.h"
+#include "SDL_filesystem.h"
+#include "SDL_system.h"
 
 
 char *
@@ -44,7 +47,7 @@ SDL_GetPrefPath(const char *org, const char *app)
     if (path) {
         size_t pathlen = SDL_strlen(path)+2;
         char *fullpath = (char *)SDL_malloc(pathlen);
-        if (fullpath == NULL) {
+        if (!fullpath) {
             SDL_OutOfMemory();
             return NULL;
         }

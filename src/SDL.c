@@ -22,8 +22,16 @@
 
 #if defined(__WIN32__) || defined(__GDK__)
 #include "core/windows/SDL_windows.h"
+#elif defined(__OS2__)
+#include <stdlib.h> /* _exit() */
 #elif !defined(__WINRT__)
 #include <unistd.h> /* _exit(), etc. */
+#endif
+#if defined(__OS2__)
+#include "core/os2/SDL_os2.h"
+#if SDL_THREAD_OS2
+#include "thread/os2/SDL_systls_c.h"
+#endif
 #endif
 
 /* this checks for HAVE_DBUS_DBUS_H internally. */
@@ -35,6 +43,9 @@
 
 /* Initialization code for SDL */
 
+#include "SDL.h"
+#include "SDL_bits.h"
+#include "SDL_revision.h"
 #include "SDL_assert_c.h"
 #include "SDL_log_c.h"
 #include "events/SDL_events_c.h"
@@ -187,6 +198,10 @@ SDL_InitSubSystem(Uint32 flags)
         flags |= SDL_INIT_EVENTS;
     }
 
+#if SDL_THREAD_OS2
+    SDL_OS2TLSAlloc(); /* thread/os2/SDL_systls.c */
+#endif
+
 #if SDL_VIDEO_DRIVER_WINDOWS
     if ((flags & (SDL_INIT_HAPTIC|SDL_INIT_JOYSTICK))) {
         if (SDL_HelperWindowCreate() < 0) {
@@ -216,7 +231,7 @@ SDL_InitSubSystem(Uint32 flags)
     }
 
     /* Initialize the timer subsystem */
-    if ((flags & SDL_INIT_TIMER)) {
+    if ((flags & SDL_INIT_TIMER)){
 #if !SDL_TIMERS_DISABLED && !SDL_TIMER_DUMMY
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_TIMER)) {
             if (SDL_TimerInit() < 0) {
@@ -232,7 +247,7 @@ SDL_InitSubSystem(Uint32 flags)
     }
 
     /* Initialize the video subsystem */
-    if ((flags & SDL_INIT_VIDEO)) {
+    if ((flags & SDL_INIT_VIDEO)){
 #if !SDL_VIDEO_DISABLED
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_VIDEO)) {
             if (SDL_VideoInit(NULL) < 0) {
@@ -248,7 +263,7 @@ SDL_InitSubSystem(Uint32 flags)
     }
 
     /* Initialize the audio subsystem */
-    if ((flags & SDL_INIT_AUDIO)) {
+    if ((flags & SDL_INIT_AUDIO)){
 #if !SDL_AUDIO_DISABLED
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_AUDIO)) {
             if (SDL_AudioInit(NULL) < 0) {
@@ -264,7 +279,7 @@ SDL_InitSubSystem(Uint32 flags)
     }
 
     /* Initialize the joystick subsystem */
-    if ((flags & SDL_INIT_JOYSTICK)) {
+    if ((flags & SDL_INIT_JOYSTICK)){
 #if !SDL_JOYSTICK_DISABLED
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_JOYSTICK)) {
            if (SDL_JoystickInit() < 0) {
@@ -279,7 +294,7 @@ SDL_InitSubSystem(Uint32 flags)
 #endif
     }
 
-    if ((flags & SDL_INIT_GAMECONTROLLER)) {
+    if ((flags & SDL_INIT_GAMECONTROLLER)){
 #if !SDL_JOYSTICK_DISABLED
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_GAMECONTROLLER)) {
             if (SDL_GameControllerInit() < 0) {
@@ -295,7 +310,7 @@ SDL_InitSubSystem(Uint32 flags)
     }
 
     /* Initialize the haptic subsystem */
-    if ((flags & SDL_INIT_HAPTIC)) {
+    if ((flags & SDL_INIT_HAPTIC)){
 #if !SDL_HAPTIC_DISABLED
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_HAPTIC)) {
             if (SDL_HapticInit() < 0) {
@@ -311,7 +326,7 @@ SDL_InitSubSystem(Uint32 flags)
     }
 
     /* Initialize the sensor subsystem */
-    if ((flags & SDL_INIT_SENSOR)) {
+    if ((flags & SDL_INIT_SENSOR)){
 #if !SDL_SENSOR_DISABLED
         if (SDL_PrivateShouldInitSubsystem(SDL_INIT_SENSOR)) {
             if (SDL_SensorInit() < 0) {
@@ -328,11 +343,11 @@ SDL_InitSubSystem(Uint32 flags)
 
     (void) flags_initialized;  /* make static analysis happy, since this only gets used in error cases. */
 
-    return 0;
+    return (0);
 
 quit_and_error:
     SDL_QuitSubSystem(flags_initialized);
-    return -1;
+    return (-1);
 }
 
 int
@@ -344,6 +359,13 @@ SDL_Init(Uint32 flags)
 void
 SDL_QuitSubSystem(Uint32 flags)
 {
+#if defined(__OS2__)
+#if SDL_THREAD_OS2
+    SDL_OS2TLSFree(); /* thread/os2/SDL_systls.c */
+#endif
+    SDL_OS2Quit();
+#endif
+
     /* Shut down requested initialized subsystems */
 #if !SDL_SENSOR_DISABLED
     if ((flags & SDL_INIT_SENSOR)) {
@@ -500,7 +522,8 @@ SDL_GetVersion(SDL_version * ver)
     static SDL_bool check_hint = SDL_TRUE;
     static SDL_bool legacy_version = SDL_FALSE;
 
-    if (ver == NULL) {        return;
+    if (!ver) {
+        return;
     }
 
     SDL_VERSION(ver);
@@ -524,73 +547,82 @@ SDL_GetRevision(void)
     return SDL_REVISION;
 }
 
+/* Get the library source revision number */
+int
+SDL_GetRevisionNumber(void)
+{
+    return 0;  /* doesn't make sense without Mercurial. */
+}
+
 /* Get the name of the platform */
 const char *
 SDL_GetPlatform(void)
 {
-#if defined(__AIX__)
+#if __AIX__
     return "AIX";
-#elif defined(__ANDROID__)
+#elif __ANDROID__
     return "Android";
-#elif defined(__BSDI__)
+#elif __BSDI__
     return "BSDI";
-#elif defined(__DREAMCAST__)
+#elif __DREAMCAST__
     return "Dreamcast";
-#elif defined(__EMSCRIPTEN__)
+#elif __EMSCRIPTEN__
     return "Emscripten";
-#elif defined(__FREEBSD__)
+#elif __FREEBSD__
     return "FreeBSD";
-#elif defined(__HAIKU__)
+#elif __HAIKU__
     return "Haiku";
-#elif defined(__HPUX__)
+#elif __HPUX__
     return "HP-UX";
-#elif defined(__IRIX__)
+#elif __IRIX__
     return "Irix";
-#elif defined(__LINUX__)
+#elif __LINUX__
     return "Linux";
-#elif defined(__MINT__)
+#elif __MINT__
     return "Atari MiNT";
-#elif defined(__MACOS__)
-    return "macOS";
-#elif defined(__NACL__)
+#elif __MACOS__
+    return "MacOS Classic";
+#elif __MACOSX__
+    return "Mac OS X";
+#elif __NACL__
     return "NaCl";
-#elif defined(__NETBSD__)
+#elif __NETBSD__
     return "NetBSD";
-#elif defined(__OPENBSD__)
+#elif __OPENBSD__
     return "OpenBSD";
-#elif defined(__OS2__)
+#elif __OS2__
     return "OS/2";
-#elif defined(__OSF__)
+#elif __OSF__
     return "OSF/1";
-#elif defined(__QNXNTO__)
+#elif __QNXNTO__
     return "QNX Neutrino";
-#elif defined(__RISCOS__)
+#elif __RISCOS__
     return "RISC OS";
-#elif defined(__SOLARIS__)
+#elif __SOLARIS__
     return "Solaris";
-#elif defined(__WIN32__)
+#elif __WIN32__
     return "Windows";
-#elif defined(__WINRT__)
+#elif __WINRT__
     return "WinRT";
-#elif defined(__WINGDK__)
+#elif __WINGDK__
     return "WinGDK";
-#elif defined(__XBOXONE__)
+#elif __XBOXONE__
     return "Xbox One";
-#elif defined(__XBOXSERIES__)
+#elif __XBOXSERIES__
     return "Xbox Series X|S";
-#elif defined(__IOS__)
-    return "iOS";
-#elif defined(__TVOS__)
+#elif __TVOS__
     return "tvOS";
-#elif defined(__PS2__)
+#elif __IPHONEOS__
+    return "iOS";
+#elif __PS2__
     return "PlayStation 2";
-#elif defined(__PSP__)
+#elif __PSP__
     return "PlayStation Portable";
-#elif defined(__VITA__)
+#elif __VITA__
     return "PlayStation Vita";
-#elif defined(__NGAGE__)
+#elif __NGAGE__
     return "Nokia N-Gage";
-#elif defined(__3DS__)
+#elif __3DS__
     return "Nintendo 3DS";
 #else
     return "Unknown (see SDL_platform.h)";
@@ -603,7 +635,7 @@ SDL_IsTablet(void)
 #if __ANDROID__
     extern SDL_bool SDL_IsAndroidTablet(void);
     return SDL_IsAndroidTablet();
-#elif __IOS__
+#elif __IPHONEOS__
     extern SDL_bool SDL_IsIPad(void);
     return SDL_IsIPad();
 #else

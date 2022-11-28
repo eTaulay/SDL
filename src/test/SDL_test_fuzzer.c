@@ -24,10 +24,26 @@
   Data generators for fuzzing test data in a reproducible way.
 
 */
-#include <SDL3/SDL_test.h>
 
-#include <float.h>      /* Needed for FLT_MAX and DBL_EPSILON */
-#include <limits.h>     /* Needed for UCHAR_MAX, etc. */
+#include "SDL_config.h"
+
+#include <limits.h>
+/* Visual Studio 2008 doesn't have stdint.h */
+#if defined(_MSC_VER) && _MSC_VER <= 1500
+#define UINT8_MAX   _UI8_MAX
+#define UINT16_MAX  _UI16_MAX
+#define UINT32_MAX  _UI32_MAX
+#define INT64_MIN    _I64_MIN
+#define INT64_MAX    _I64_MAX
+#define UINT64_MAX  _UI64_MAX
+#else
+#include <stdint.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <float.h>
+
+#include "SDL_test.h"
 
 /**
  * Counter for fuzzer invocations
@@ -151,11 +167,11 @@ SDLTest_RandomIntegerInRange(Sint32 pMin, Sint32 pMax)
     Sint64 temp;
     Sint64 number;
 
-    if (pMin > pMax) {
+    if(pMin > pMax) {
         temp = min;
         min = max;
         max = temp;
-    } else if (pMin == pMax) {
+    } else if(pMin == pMax) {
         return (Sint32)min;
     }
 
@@ -477,7 +493,7 @@ SDLTest_RandomAsciiStringWithMaximumLength(int maxLength)
 {
     int size;
 
-    if (maxLength < 1) {
+    if(maxLength < 1) {
                 SDL_InvalidParamError("maxLength");
         return NULL;
     }
@@ -494,7 +510,7 @@ SDLTest_RandomAsciiStringOfSize(int size)
     int counter;
 
 
-    if (size < 1) {
+    if(size < 1) {
                 SDL_InvalidParamError("size");
         return NULL;
     }
@@ -504,7 +520,7 @@ SDLTest_RandomAsciiStringOfSize(int size)
       return NULL;
         }
 
-    for (counter = 0; counter < size; ++counter) {
+    for(counter = 0; counter < size; ++counter) {
         string[counter] = (char)SDLTest_RandomIntegerInRange(32, 126);
     }
 

@@ -22,6 +22,8 @@
 
 #if SDL_VIDEO_DRIVER_RISCOS
 
+#include "SDL_video.h"
+#include "SDL_mouse.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -56,9 +58,9 @@ RISCOS_CreateDevice(void)
 
     /* Initialize all variables that we clean on shutdown */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
-    if (device == NULL) {
+    if (!device) {
         SDL_OutOfMemory();
-        return 0;
+        return (0);
     }
 
     /* Initialize internal data */

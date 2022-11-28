@@ -22,9 +22,11 @@
 
 #if SDL_VIDEO_DRIVER_COCOA
 
+#include "SDL_timer.h"
 
 #include "SDL_cocoavideo.h"
 #include "../../events/SDL_events_c.h"
+#include "SDL_hints.h"
 
 /* This define was added in the 10.9 SDK. */
 #ifndef kIOPMAssertPreventUserIdleDisplaySleep
@@ -578,7 +580,7 @@ Cocoa_SuspendScreenSaver(_THIS)
     if (_this->suspend_screensaver) {
         /* FIXME: this should ideally describe the real reason why the game
          * called SDL_DisableScreenSaver. Note that the name is only meant to be
-         * seen by macOS power users. there's an additional optional human-readable
+         * seen by OS X power users. there's an additional optional human-readable
          * (localized) reason parameter which we don't set.
          */
         IOPMAssertionID assertion = kIOPMNullAssertionID;

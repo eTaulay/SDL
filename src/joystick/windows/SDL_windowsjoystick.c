@@ -32,6 +32,12 @@
  * with polled devices, and it's fine to call IDirectInputDevice8_GetDeviceData and
  * let it return 0 events. */
 
+#include "SDL_error.h"
+#include "SDL_events.h"
+#include "SDL_hints.h"
+#include "SDL_timer.h"
+#include "SDL_mutex.h"
+#include "SDL_joystick.h"
 #include "../SDL_sysjoystick.h"
 #include "../../thread/SDL_systhread.h"
 #include "../../core/windows/SDL_windows.h"
@@ -246,13 +252,11 @@ SDL_CleanupDeviceNotification(SDL_DeviceNotificationData *data)
     RAWINPUT_UnregisterNotifications();
 #endif
 
-    if (data->hNotify) {
+    if (data->hNotify)
         UnregisterDeviceNotification(data->hNotify);
-    }
 
-    if (data->messageWindow) {
+    if (data->messageWindow)
         DestroyWindow(data->messageWindow);
-    }
 
     UnregisterClass(data->wincl.lpszClassName, data->wincl.hInstance);
 
@@ -396,18 +400,18 @@ static int
 SDL_StartJoystickThread(void)
 {
     s_mutexJoyStickEnum = SDL_CreateMutex();
-    if (s_mutexJoyStickEnum == NULL) {
+    if (!s_mutexJoyStickEnum) {
         return -1;
     }
 
     s_condJoystickThread = SDL_CreateCond();
-    if (s_condJoystickThread == NULL) {
+    if (!s_condJoystickThread) {
         return -1;
     }
 
     s_bJoystickThreadQuit = SDL_FALSE;
     s_joystickThread = SDL_CreateThreadInternal(SDL_JoystickThread, "SDL_joystick", 64 * 1024, NULL);
-    if (s_joystickThread == NULL) {
+    if (!s_joystickThread) {
         return -1;
     }
     return 0;
@@ -416,7 +420,7 @@ SDL_StartJoystickThread(void)
 static void
 SDL_StopJoystickThread(void)
 {
-    if (s_joystickThread == NULL) {
+    if (!s_joystickThread) {
         return;
     }
 
@@ -590,9 +594,8 @@ WINDOWS_JoystickGetDeviceName(int device_index)
     JoyStick_DeviceData *device = SYS_Joystick;
     int index;
 
-    for (index = device_index; index > 0; index--) {
+    for (index = device_index; index > 0; index--)
         device = device->pNext;
-    }
 
     return device->joystickname;
 }
@@ -603,9 +606,8 @@ WINDOWS_JoystickGetDevicePath(int device_index)
     JoyStick_DeviceData *device = SYS_Joystick;
     int index;
 
-    for (index = device_index; index > 0; index--) {
+    for (index = device_index; index > 0; index--)
         device = device->pNext;
-    }
 
     return device->path;
 }
@@ -616,9 +618,8 @@ WINDOWS_JoystickGetDevicePlayerIndex(int device_index)
     JoyStick_DeviceData *device = SYS_Joystick;
     int index;
 
-    for (index = device_index; index > 0; index--) {
+    for (index = device_index; index > 0; index--)
         device = device->pNext;
-    }
 
     return device->bXInputDevice ? (int)device->XInputUserId : -1;
 }
@@ -635,9 +636,8 @@ WINDOWS_JoystickGetDeviceGUID(int device_index)
     JoyStick_DeviceData *device = SYS_Joystick;
     int index;
 
-    for (index = device_index; index > 0; index--) {
+    for (index = device_index; index > 0; index--)
         device = device->pNext;
-    }
 
     return device->guid;
 }
@@ -649,9 +649,8 @@ WINDOWS_JoystickGetDeviceInstanceID(int device_index)
     JoyStick_DeviceData *device = SYS_Joystick;
     int index;
 
-    for (index = device_index; index > 0; index--) {
+    for (index = device_index; index > 0; index--)
         device = device->pNext;
-    }
 
     return device->nInstanceID;
 }
@@ -667,9 +666,8 @@ WINDOWS_JoystickOpen(SDL_Joystick *joystick, int device_index)
     JoyStick_DeviceData *device = SYS_Joystick;
     int index;
 
-    for (index = device_index; index > 0; index--) {
+    for (index = device_index; index > 0; index--)
         device = device->pNext;
-    }
 
     /* allocate memory for system specific hardware data */
     joystick->instance_id = device->nInstanceID;

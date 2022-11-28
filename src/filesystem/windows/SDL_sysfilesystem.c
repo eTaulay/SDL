@@ -28,6 +28,9 @@
 #include "../../core/windows/SDL_windows.h"
 #include <shlobj.h>
 
+#include "SDL_error.h"
+#include "SDL_stdinc.h"
+#include "SDL_filesystem.h"
 
 char *
 SDL_GetBasePath(void)
@@ -40,7 +43,7 @@ SDL_GetBasePath(void)
 
     while (SDL_TRUE) {
         void *ptr = SDL_realloc(path, buflen * sizeof (WCHAR));
-        if (ptr == NULL) {
+        if (!ptr) {
             SDL_free(path);
             SDL_OutOfMemory();
             return NULL;
@@ -98,11 +101,11 @@ SDL_GetPrefPath(const char *org, const char *app)
     size_t new_wpath_len = 0;
     BOOL api_result = FALSE;
 
-    if (app == NULL) {
+    if (!app) {
         SDL_InvalidParamError("app");
         return NULL;
     }
-    if (org == NULL) {
+    if (!org) {
         org = "";
     }
 
@@ -170,6 +173,8 @@ SDL_GetPrefPath(const char *org, const char *app)
 #endif /* SDL_FILESYSTEM_WINDOWS */
 
 #ifdef SDL_FILESYSTEM_XBOX
+#include "SDL_filesystem.h"
+#include "SDL_error.h"
 char *
 SDL_GetBasePath(void)
 {

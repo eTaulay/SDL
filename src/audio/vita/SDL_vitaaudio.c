@@ -27,6 +27,9 @@
 #include <stdlib.h>
 #include <malloc.h> /* memalign() */
 
+#include "SDL_audio.h"
+#include "SDL_error.h"
+#include "SDL_timer.h"
 #include "../SDL_audio_c.h"
 #include "../SDL_audiodev_c.h"
 #include "../SDL_sysaudio.h"
@@ -78,7 +81,7 @@ VITAAUD_OpenDevice(_THIS, const char *devname)
         }
     }
 
-    if (!test_format) {
+    if(!test_format) {
         return SDL_SetError("Unsupported audio format");
     }
 
@@ -108,7 +111,7 @@ VITAAUD_OpenDevice(_THIS, const char *devname)
         format = SCE_AUDIO_OUT_MODE_STEREO;
     }
 
-    if (this->spec.freq < 48000) {
+    if(this->spec.freq < 48000) {
         port = SCE_AUDIO_OUT_PORT_TYPE_BGM;
     }
 

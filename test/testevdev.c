@@ -18,11 +18,12 @@
 
 static int run_test(void);
 
-/* FIXME: Need CMake tests for this */
 #if HAVE_LIBUDEV_H || defined(SDL_JOYSTICK_LINUX)
 
 #include <stdint.h>
 
+#include "SDL_stdinc.h"
+#include "SDL_endian.h"
 #include "../src/core/linux/SDL_evdev_capabilities.h"
 #include "../src/core/linux/SDL_evdev_capabilities.c"
 
@@ -997,7 +998,8 @@ run_test(void)
 
         if (actual == t->expected) {
             printf("\tOK\n");
-        } else {
+        }
+        else {
             printf("\tExpected 0x%08x\n", t->expected);
 
             for (j = 0; device_classes[j].code != 0; j++) {
@@ -1037,5 +1039,3 @@ main(int argc, char *argv[])
 {
     return run_test() ? 0 : 1;
 }
-
-/* vi: set ts=4 sw=4 expandtab: */

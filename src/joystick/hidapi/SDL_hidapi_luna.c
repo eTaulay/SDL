@@ -22,6 +22,9 @@
 
 #ifdef SDL_JOYSTICK_HIDAPI
 
+#include "SDL_events.h"
+#include "SDL_joystick.h"
+#include "SDL_gamecontroller.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
 #include "SDL_hidapi_rumble.h"
@@ -33,7 +36,7 @@
 /*#define DEBUG_LUNA_PROTOCOL*/
 
 /* Sending rumble on macOS blocks for a long time and eventually fails */
-#if !defined(__MACOS__)
+#if !defined(__MACOSX__)
 #define ENABLE_LUNA_BLUETOOTH_RUMBLE
 #endif
 
@@ -63,7 +66,9 @@ HIDAPI_DriverLuna_UnregisterHints(SDL_HintCallback callback, void *userdata)
 static SDL_bool
 HIDAPI_DriverLuna_IsEnabled(void)
 {
-    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_LUNA, SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI, SDL_HIDAPI_DEFAULT));
+    return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_LUNA,
+               SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI,
+                   SDL_HIDAPI_DEFAULT));
 }
 
 static SDL_bool
@@ -78,7 +83,7 @@ HIDAPI_DriverLuna_InitDevice(SDL_HIDAPI_Device *device)
     SDL_DriverLuna_Context *ctx;
 
     ctx = (SDL_DriverLuna_Context *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
@@ -284,11 +289,14 @@ HIDAPI_DriverLuna_HandleBluetoothStatePacket(SDL_Joystick *joystick, SDL_DriverL
         int level = data[1] * 100 / 0xFF;
         if (level == 0) {
             SDL_PrivateJoystickBatteryLevel(joystick, SDL_JOYSTICK_POWER_EMPTY);
-        } else if (level <= 20) {
+        }
+        else if (level <= 20) {
             SDL_PrivateJoystickBatteryLevel(joystick, SDL_JOYSTICK_POWER_LOW);
-        } else if (level <= 70) {
+        }
+        else if (level <= 70) {
             SDL_PrivateJoystickBatteryLevel(joystick, SDL_JOYSTICK_POWER_MEDIUM);
-        } else {
+        }
+        else {
             SDL_PrivateJoystickBatteryLevel(joystick, SDL_JOYSTICK_POWER_FULL);
         }
 
@@ -408,7 +416,7 @@ HIDAPI_DriverLuna_UpdateDevice(SDL_HIDAPI_Device *device)
 #ifdef DEBUG_LUNA_PROTOCOL
         HIDAPI_DumpPacket("Amazon Luna packet: size = %d", data, size);
 #endif
-        if (joystick == NULL) {
+        if (!joystick) {
             continue;
         }
 
@@ -426,7 +434,7 @@ HIDAPI_DriverLuna_UpdateDevice(SDL_HIDAPI_Device *device)
         /* Read error, device is disconnected */
         HIDAPI_JoystickDisconnected(device, device->joysticks[0]);
     }
-    return size >= 0;
+    return (size >= 0);
 }
 
 static void

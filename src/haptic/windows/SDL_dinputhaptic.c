@@ -20,10 +20,16 @@
 */
 #include "../../SDL_internal.h"
 
+#include "SDL.h"
+#include "SDL_error.h"
+#include "SDL_haptic.h"
 #include "../SDL_syshaptic.h"
 
 #if SDL_HAPTIC_DINPUT
 
+#include "SDL_hints.h"
+#include "SDL_stdinc.h"
+#include "SDL_timer.h"
 #include "SDL_windowshaptic_c.h"
 #include "SDL_dinputhaptic_c.h"
 #include "../../joystick/windows/SDL_windowsjoystick_c.h"
@@ -569,22 +575,18 @@ SDL_SYS_SetDirection(DIEFFECT * effect, SDL_HapticDirection * dir, int naxes)
     case SDL_HAPTIC_CARTESIAN:
         effect->dwFlags |= DIEFF_CARTESIAN;
         rglDir[0] = dir->dir[0];
-        if (naxes > 1) {
+        if (naxes > 1)
             rglDir[1] = dir->dir[1];
-        }
-        if (naxes > 2) {
+        if (naxes > 2)
             rglDir[2] = dir->dir[2];
-        }
         return 0;
     case SDL_HAPTIC_SPHERICAL:
         effect->dwFlags |= DIEFF_SPHERICAL;
         rglDir[0] = dir->dir[0];
-        if (naxes > 1) {
+        if (naxes > 1)
             rglDir[1] = dir->dir[1];
-        }
-        if (naxes > 2) {
+        if (naxes > 2)
             rglDir[2] = dir->dir[2];
-        }
         return 0;
     case SDL_HAPTIC_STEERING_AXIS:
         effect->dwFlags |= DIEFF_CARTESIAN;
@@ -1096,9 +1098,8 @@ SDL_DINPUT_HapticGetEffectStatus(SDL_Haptic * haptic, struct haptic_effect *effe
         return DI_SetError("Getting effect status", ret);
     }
 
-    if (status == 0) {
+    if (status == 0)
         return SDL_FALSE;
-    }
     return SDL_TRUE;
 }
 

@@ -12,13 +12,14 @@
 /* Simple program:  Move N sprites around on the screen as fast as possible */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 #include "testutils.h"
 
 #define WINDOW_WIDTH    640

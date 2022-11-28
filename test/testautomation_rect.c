@@ -2,8 +2,11 @@
  * Original code: automated SDL rect test written by Edgar Simo "bobbens"
  * New/updated tests: aschiffler at ferzkopp dot net
  */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_test.h>
+
+#include <stdio.h>
+
+#include "SDL.h"
+#include "SDL_test.h"
 
 /* ================= Test Case Implementation ================== */
 
@@ -1006,18 +1009,10 @@ int rect_testEnclosePoints(void *arg)
             miny = newy;
             maxy = newy;
         } else {
-            if (newx < minx) {
-                minx = newx;
-            }
-            if (newx > maxx) {
-                maxx = newx;
-            }
-            if (newy < miny) {
-                miny = newy;
-            }
-            if (newy > maxy) {
-                maxy = newy;
-            }
+            if (newx < minx) minx = newx;
+            if (newx > maxx) maxx = newx;
+            if (newy < miny) miny = newy;
+            if (newy > maxy) maxy = newy;
         }
     }
 
@@ -1090,18 +1085,10 @@ int rect_testEnclosePointsRepeatedInput(void *arg)
             miny = newy;
             maxy = newy;
         } else {
-            if (newx < minx) {
-                minx = newx;
-            }
-            if (newx > maxx) {
-                maxx = newx;
-            }
-            if (newy < miny) {
-                miny = newy;
-            }
-            if (newy > maxy) {
-                maxy = newy;
-            }
+            if (newx < minx) minx = newx;
+            if (newx > maxx) maxx = newx;
+            if (newy < miny) miny = newy;
+            if (newy > maxy) maxy = newy;
         }
     }
 
@@ -1178,18 +1165,10 @@ int rect_testEnclosePointsWithClipping(void *arg)
                 miny = newy;
                 maxy = newy;
             } else {
-                if (newx < minx) {
-                    minx = newx;
-                }
-                if (newx > maxx) {
-                    maxx = newx;
-                }
-                if (newy < miny) {
-                    miny = newy;
-                }
-                if (newy > maxy) {
-                    maxy = newy;
-                }
+                if (newx < minx) minx = newx;
+                if (newx > maxx) maxx = newx;
+                if (newy < miny) miny = newy;
+                if (newy > maxy) maxy = newy;
             }
             expectedEnclosed = SDL_TRUE;
         }
@@ -1326,18 +1305,10 @@ int rect_testUnionRectOutside(void *arg)
                 refRectB.w=refRectA.w - 2;
                 refRectB.h=refRectA.h - 2;
                 expectedResult = refRectA;
-                if (dx == -1) {
-                    expectedResult.x--;
-                }
-                if (dy == -1) {
-                    expectedResult.y--;
-                }
-                if ((dx == 1) || (dx == -1)) {
-                    expectedResult.w++;
-                }
-                if ((dy == 1) || (dy == -1)) {
-                    expectedResult.h++;
-                }
+                if (dx == -1) expectedResult.x--;
+                if (dy == -1) expectedResult.y--;
+                if ((dx == 1) || (dx == -1)) expectedResult.w++;
+                if ((dy == 1) || (dy == -1)) expectedResult.h++;
                 rectA = refRectA;
                 rectB = refRectB;
                 SDL_UnionRect(&rectA, &rectB, &result);
@@ -1462,18 +1433,10 @@ int rect_testUnionRectInside(void *arg)
                 refRectA.w=SDLTest_RandomIntegerInRange(256, 1024);
                 refRectA.h=SDLTest_RandomIntegerInRange(256, 1024);
                 refRectB = refRectA;
-                if (dx == -1) {
-                    refRectB.x++;
-                }
-                if ((dx == 1) || (dx == -1)) {
-                    refRectB.w--;
-                }
-                if (dy == -1) {
-                    refRectB.y++;
-                }
-                if ((dy == 1) || (dy == -1)) {
-                    refRectB.h--;
-                }
+                if (dx == -1) refRectB.x++;
+                if ((dx == 1) || (dx == -1)) refRectB.w--;
+                if (dy == -1) refRectB.y++;
+                if ((dy == 1) || (dy == -1)) refRectB.h--;
                 expectedResult = refRectA;
                 rectA = refRectA;
                 rectB = refRectB;
@@ -1827,5 +1790,3 @@ SDLTest_TestSuiteReference rectTestSuite = {
     rectTests,
     NULL
 };
-
-/* vi: set ts=4 sw=4 expandtab: */

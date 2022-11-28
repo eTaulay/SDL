@@ -15,13 +15,16 @@
 /* loopwaves.c is much more robust in handling WAVE files --
     This is only for simple WAVEs
 */
+#include "SDL_config.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 #include "testutils.h"
 
 static struct
@@ -104,9 +107,8 @@ static int done = 0;
 void
 loop()
 {
-    if (done || (SDL_GetAudioDeviceStatus(device) != SDL_AUDIO_PLAYING)) {
+    if(done || (SDL_GetAudioDeviceStatus(device) != SDL_AUDIO_PLAYING))
         emscripten_cancel_main_loop();
-    }
 }
 #endif
 
@@ -122,7 +124,7 @@ main(int argc, char *argv[])
     /* Load the SDL library */
     if (SDL_Init(SDL_INIT_AUDIO|SDL_INIT_EVENTS) < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s\n", SDL_GetError());
-        return 1;
+        return (1);
     }
 
     filename = GetResourceFilename(argc > 1 ? argv[1] : NULL, "sample.wav");
@@ -176,7 +178,7 @@ main(int argc, char *argv[])
     SDL_FreeWAV(wave.sound);
     SDL_free(filename);
     SDL_Quit();
-    return 0;
+    return (0);
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

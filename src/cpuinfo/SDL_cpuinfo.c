@@ -18,16 +18,28 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-#ifndef TEST_MAIN
+#ifdef TEST_MAIN
+#include "SDL_config.h"
+#else
 #include "../SDL_internal.h"
 #endif
 
 #if defined(__WIN32__) || defined(__WINRT__) || defined(__GDK__)
 #include "../core/windows/SDL_windows.h"
 #endif
+#if defined(__OS2__)
+#undef HAVE_SYSCTLBYNAME
+#define INCL_DOS
+#include <os2.h>
+#ifndef QSV_NUMPROCESSORS
+#define QSV_NUMPROCESSORS 26
+#endif
+#endif
 
 /* CPU feature detection for SDL */
 
+#include "SDL_cpuinfo.h"
+#include "SDL_assert.h"
 
 #ifdef HAVE_SYSCONF
 #include <unistd.h>
@@ -36,7 +48,7 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
-#if defined(__MACOS__) && (defined(__ppc__) || defined(__ppc64__))
+#if defined(__MACOSX__) && (defined(__ppc__) || defined(__ppc64__))
 #include <sys/sysctl.h>         /* For AltiVec check */
 #elif defined(__OpenBSD__) && defined(__powerpc__)
 #include <sys/types.h>
@@ -48,6 +60,10 @@
 #elif SDL_ALTIVEC_BLITTERS && HAVE_SETJMP
 #include <signal.h>
 #include <setjmp.h>
+#endif
+
+#if defined(__QNXNTO__)
+#include <sys/syspage.h>
 #endif
 
 #if (defined(__LINUX__) || defined(__ANDROID__)) && defined(__arm__)
@@ -107,7 +123,7 @@
 #define CPU_CFG2_LSX    (1 << 6)
 #define CPU_CFG2_LASX   (1 << 7)
 
-#if SDL_ALTIVEC_BLITTERS && HAVE_SETJMP && !__MACOS__ && !__OpenBSD__ && !__FreeBSD__
+#if SDL_ALTIVEC_BLITTERS && HAVE_SETJMP && !__MACOSX__ && !__OpenBSD__ && !__FreeBSD__
 /* This is the brute force way of detecting instruction sets...
    the idea is borrowed from the libmpeg2 library - thanks!
  */
@@ -311,7 +327,7 @@ CPU_haveAltiVec(void)
 {
     volatile int altivec = 0;
 #ifndef SDL_CPUINFO_DISABLED
-#if (defined(__MACOS__) && (defined(__ppc__) || defined(__ppc64__))) || (defined(__OpenBSD__) && defined(__powerpc__))
+#if (defined(__MACOSX__) && (defined(__ppc__) || defined(__ppc64__))) || (defined(__OpenBSD__) && defined(__powerpc__))
 #ifdef __OpenBSD__
     int selectors[2] = { CTL_MACHDEP, CPU_ALTIVEC };
 #else
@@ -320,9 +336,8 @@ CPU_haveAltiVec(void)
     int hasVectorUnit = 0;
     size_t length = sizeof(hasVectorUnit);
     int error = sysctl(selectors, 2, &hasVectorUnit, &length, NULL, 0);
-    if (0 == error) {
+    if (0 == error)
         altivec = (hasVectorUnit != 0);
-    }
 #elif defined(__FreeBSD__) && defined(__powerpc__)
     unsigned long cpufeatures = 0;
     elf_aux_info(AT_HWCAP, &cpufeatures, sizeof(cpufeatures));
@@ -363,10 +378,13 @@ CPU_haveARMSIMD(void)
     int fd;
 
     fd = open("/proc/self/auxv", O_RDONLY | O_CLOEXEC);
-    if (fd >= 0) {
+    if (fd >= 0)
+    {
         Elf32_auxv_t aux;
-        while (read(fd, &aux, sizeof aux) == sizeof aux) {
-            if (aux.a_type == AT_PLATFORM) {
+        while (read(fd, &aux, sizeof aux) == sizeof aux)
+        {
+            if (aux.a_type == AT_PLATFORM)
+            {
                 const char *plat = (const char *) aux.a_un.a_val;
                 if (plat) {
                     arm_simd = SDL_strncmp(plat, "v6l", 3) == 0 ||
@@ -385,19 +403,16 @@ CPU_haveARMSIMD(void)
 {
     _kernel_swi_regs regs;
     regs.r[0] = 0;
-    if (_kernel_swi(OS_PlatformFeatures, &regs, &regs) != NULL) {
+    if (_kernel_swi(OS_PlatformFeatures, &regs, &regs) != NULL)
         return 0;
-    }
 
-    if (!(regs.r[0] & (1 << 31))) {
+    if (!(regs.r[0] & (1<<31)))
         return 0;
-    }
 
     regs.r[0] = 34;
     regs.r[1] = 29;
-    if (_kernel_swi(OS_PlatformFeatures, &regs, &regs) != NULL) {
+    if (_kernel_swi(OS_PlatformFeatures, &regs, &regs) != NULL)
         return 0;
-    }
 
     return regs.r[0];
 }
@@ -419,7 +434,8 @@ readProcAuxvForNeon(void)
     int fd;
 
     fd = open("/proc/self/auxv", O_RDONLY | O_CLOEXEC);
-    if (fd >= 0) {
+    if (fd >= 0)
+    {
         Elf32_auxv_t aux;
         while (read(fd, &aux, sizeof (aux)) == sizeof (aux)) {
             if (aux.a_type == AT_HWCAP) {
@@ -465,12 +481,13 @@ CPU_haveNEON(void)
     return 1;  /* OpenBSD only supports ARMv7 CPUs that have NEON. */
 #elif defined(HAVE_ELF_AUX_INFO)
     unsigned long hasneon = 0;
-    if (elf_aux_info(AT_HWCAP, (void *)&hasneon, (int)sizeof(hasneon)) != 0) {
+    if (elf_aux_info(AT_HWCAP, (void *)&hasneon, (int)sizeof(hasneon)) != 0)
         return 0;
-    }
-    return (hasneon & HWCAP_NEON) == HWCAP_NEON;
+    return ((hasneon & HWCAP_NEON) == HWCAP_NEON);
+#elif defined(__QNXNTO__)
+    return SYSPAGE_ENTRY(cpuinfo)->flags & ARM_CPU_FLAG_NEON;
 #elif (defined(__LINUX__) || defined(__ANDROID__)) && defined(HAVE_GETAUXVAL)
-    return (getauxval(AT_HWCAP) & HWCAP_NEON) == HWCAP_NEON;
+    return ((getauxval(AT_HWCAP) & HWCAP_NEON) == HWCAP_NEON);
 #elif defined(__LINUX__)
     return readProcAuxvForNeon();
 #elif defined(__ANDROID__)
@@ -539,7 +556,7 @@ CPU_have3DNow(void)
         cpuid(0x80000000, a, b, c, d);
         if (a >= 0x80000001) {
             cpuid(0x80000001, a, b, c, d);
-            return d & 0x80000000;
+            return (d & 0x80000000);
         }
     }
     return 0;
@@ -612,7 +629,7 @@ CPU_haveAVX2(void)
         int a, b, c, d;
         (void) a; (void) b; (void) c; (void) d;  /* compiler warnings... */
         cpuid(7, a, b, c, d);
-        return b & 0x00000020;
+        return (b & 0x00000020);
     }
     return 0;
 }
@@ -632,7 +649,7 @@ CPU_haveAVX512F(void)
         int a, b, c, d;
         (void) a; (void) b; (void) c; (void) d;  /* compiler warnings... */
         cpuid(7, a, b, c, d);
-        return b & 0x00010000;
+        return (b & 0x00010000);
     }
     return 0;
 }
@@ -661,6 +678,12 @@ SDL_GetCPUCount(void)
             SYSTEM_INFO info;
             GetSystemInfo(&info);
             SDL_CPUCount = info.dwNumberOfProcessors;
+        }
+#endif
+#ifdef __OS2__
+        if (SDL_CPUCount <= 0) {
+            DosQuerySysInfo(QSV_NUMPROCESSORS, QSV_NUMPROCESSORS,
+                            &SDL_CPUCount, sizeof(SDL_CPUCount) );
         }
 #endif
 #endif
@@ -816,10 +839,10 @@ SDL_GetCPUCacheLineSize(void)
     (void) a; (void) b; (void) c; (void) d;
    if (SDL_strcmp(cpuType, "GenuineIntel") == 0 || SDL_strcmp(cpuType, "CentaurHauls") == 0 || SDL_strcmp(cpuType, "  Shanghai  ") == 0) {
         cpuid(0x00000001, a, b, c, d);
-        return ((b >> 8) & 0xff) * 8;
+        return (((b >> 8) & 0xff) * 8);
     } else if (SDL_strcmp(cpuType, "AuthenticAMD") == 0 || SDL_strcmp(cpuType, "HygonGenuine") == 0) {
         cpuid(0x80000005, a, b, c, d);
-        return c & 0xff;
+        return (c & 0xff);
     } else {
         /* Just make a guess here... */
         return SDL_CACHELINE_SIZE;
@@ -1039,6 +1062,13 @@ SDL_GetSystemRAM(void)
             if (GlobalMemoryStatusEx(&stat)) {
                 SDL_SystemRAM = (int)(stat.ullTotalPhys / (1024 * 1024));
             }
+        }
+#endif
+#ifdef __OS2__
+        if (SDL_SystemRAM <= 0) {
+            Uint32 sysram = 0;
+            DosQuerySysInfo(QSV_TOTPHYSMEM, QSV_TOTPHYSMEM, &sysram, 4);
+            SDL_SystemRAM = (int) (sysram / 0x100000U);
         }
 #endif
 #ifdef __RISCOS__

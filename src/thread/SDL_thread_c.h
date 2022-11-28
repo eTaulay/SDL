@@ -23,6 +23,7 @@
 #ifndef SDL_thread_c_h_
 #define SDL_thread_c_h_
 
+#include "SDL_thread.h"
 
 /* Need the definitions of SYS_ThreadHandle */
 #if SDL_THREADS_DISABLED
@@ -41,6 +42,8 @@
 #include "n3ds/SDL_systhread_c.h"
 #elif SDL_THREAD_STDCPP
 #include "stdcpp/SDL_systhread_c.h"
+#elif SDL_THREAD_OS2
+#include "os2/SDL_systhread_c.h"
 #elif SDL_THREAD_NGAGE
 #include "ngage/SDL_systhread_c.h"
 #else

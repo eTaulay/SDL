@@ -93,13 +93,16 @@ extern void WIN_SetWindowBordered(_THIS, SDL_Window * window, SDL_bool bordered)
 extern void WIN_SetWindowResizable(_THIS, SDL_Window * window, SDL_bool resizable);
 extern void WIN_SetWindowAlwaysOnTop(_THIS, SDL_Window * window, SDL_bool on_top);
 extern void WIN_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display, SDL_bool fullscreen);
+extern int WIN_SetWindowGammaRamp(_THIS, SDL_Window * window, const Uint16 * ramp);
 extern void WIN_UpdateWindowICCProfile(SDL_Window * window, SDL_bool send_event);
 extern void* WIN_GetWindowICCProfile(_THIS, SDL_Window * window, size_t * size);
+extern int WIN_GetWindowGammaRamp(_THIS, SDL_Window * window, Uint16 * ramp);
 extern void WIN_SetWindowMouseRect(_THIS, SDL_Window * window);
 extern void WIN_SetWindowMouseGrab(_THIS, SDL_Window * window, SDL_bool grabbed);
 extern void WIN_SetWindowKeyboardGrab(_THIS, SDL_Window * window, SDL_bool grabbed);
 extern void WIN_DestroyWindow(_THIS, SDL_Window * window);
-extern int WIN_GetWindowWMInfo(_THIS, SDL_Window *window, struct SDL_SysWMinfo *info);
+extern SDL_bool WIN_GetWindowWMInfo(_THIS, SDL_Window * window,
+                                    struct SDL_SysWMinfo *info);
 extern void WIN_OnWindowEnter(_THIS, SDL_Window * window);
 extern void WIN_UpdateClipCursor(SDL_Window *window);
 extern int WIN_SetWindowHitTest(SDL_Window *window, SDL_bool enabled);

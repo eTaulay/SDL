@@ -21,6 +21,7 @@
 #include "../../SDL_internal.h"
 
 extern "C" {
+#include "SDL_thread.h"
 #include "SDL_systhread_c.h"
 }
 

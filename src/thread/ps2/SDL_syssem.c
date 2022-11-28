@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <timer_alarm.h>
 
+#include "SDL_error.h"
+#include "SDL_thread.h"
 
 #include <kernel.h>
 
@@ -103,9 +105,8 @@ int SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
     ret = WaitSema(sem->semid);
     StopTimerAlarm(&alarm);
 
-    if (ret < 0) {
+    if (ret < 0)
         return SDL_MUTEX_TIMEDOUT;
-    }
     return 0; //Wait condition satisfied.
 }
 

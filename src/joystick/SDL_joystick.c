@@ -22,7 +22,11 @@
 
 /* This is the joystick API for Simple DirectMedia Layer */
 
+#include "SDL.h"
+#include "SDL_atomic.h"
+#include "SDL_events.h"
 #include "SDL_sysjoystick.h"
+#include "SDL_hints.h"
 #include "../SDL_hints_c.h"
 
 #if !SDL_EVENTS_DISABLED
@@ -68,7 +72,7 @@ static SDL_JoystickDriver *SDL_joystick_drivers[] = {
 #ifdef SDL_JOYSTICK_IOKIT
     &SDL_DARWIN_JoystickDriver,
 #endif
-#if (defined(__MACOS__) || defined(__IOS__) || defined(__TVOS__)) && !defined(SDL_JOYSTICK_DISABLED)
+#if (defined(__MACOSX__) || defined(__IPHONEOS__) || defined(__TVOS__)) && !defined(SDL_JOYSTICK_DISABLED)
     &SDL_IOS_JoystickDriver,
 #endif
 #ifdef SDL_JOYSTICK_ANDROID
@@ -82,6 +86,9 @@ static SDL_JoystickDriver *SDL_joystick_drivers[] = {
 #endif
 #ifdef SDL_JOYSTICK_USBHID  /* !!! FIXME: "USBHID" is a generic name, and doubly-confusing with HIDAPI next to it. This is the *BSD interface, rename this. */
     &SDL_BSD_JoystickDriver,
+#endif
+#ifdef SDL_JOYSTICK_OS2
+    &SDL_OS2_JoystickDriver,
 #endif
 #ifdef SDL_JOYSTICK_PS2
     &SDL_PS2_JoystickDriver,
@@ -257,7 +264,7 @@ SDL_SetJoystickIDForPlayerIndex(int player_index, SDL_JoystickID instance_id)
 
     if (player_index >= SDL_joystick_player_count) {
         SDL_JoystickID *new_players = (SDL_JoystickID *)SDL_realloc(SDL_joystick_players, (player_index + 1)*sizeof(*SDL_joystick_players));
-        if (new_players == NULL) {
+        if (!new_players) {
             SDL_OutOfMemory();
             return SDL_FALSE;
         }
@@ -309,7 +316,7 @@ SDL_JoystickInit(void)
     int i, status;
 
     /* Create the joystick list lock */
-    if (SDL_joystick_lock == NULL) {
+    if (!SDL_joystick_lock) {
         SDL_joystick_lock = SDL_CreateMutex();
     }
 
@@ -403,7 +410,7 @@ SDL_JoystickPathForIndex(int device_index)
     SDL_UnlockJoysticks();
 
     /* FIXME: Really we should reference count this path so it doesn't go away after unlock */
-    if (path == NULL) {
+    if (!path) {
         SDL_Unsupported();
     }
     return path;
@@ -1382,7 +1389,7 @@ static void UpdateEventsForDeviceRemoval(int device_index, Uint32 type)
     }
 
     events = SDL_small_alloc(SDL_Event, num_events, &isstack);
-    if (events == NULL) {
+    if (!events) {
         return;
     }
 
@@ -1903,10 +1910,10 @@ SDL_CreateJoystickName(Uint16 vendor, Uint16 product, const char *vendor_name, c
         return SDL_strdup(custom_name);
     }
 
-    if (vendor_name == NULL) {
+    if (!vendor_name) {
         vendor_name = "";
     }
-    if (product_name == NULL) {
+    if (!product_name) {
         product_name = "";
     }
 
@@ -1958,7 +1965,7 @@ SDL_CreateJoystickName(Uint16 vendor, Uint16 product, const char *vendor_name, c
         name = SDL_strdup("Controller");
     }
 
-    if (name == NULL) {
+    if (!name) {
         return NULL;
     }
 
@@ -2023,7 +2030,7 @@ SDL_CreateJoystickGUID(Uint16 bus, Uint16 vendor, Uint16 product, Uint16 version
 
     SDL_zero(guid);
 
-    if (name == NULL) {
+    if (!name) {
         name = "";
     }
 
@@ -2213,7 +2220,7 @@ SDL_bool
 SDL_IsJoystickXboxOne(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_XBoxOneController;
+    return (eType == k_eControllerType_XBoxOneController);
 }
 
 SDL_bool
@@ -2287,68 +2294,71 @@ SDL_bool
 SDL_IsJoystickPS4(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_PS4Controller;
+    return (eType == k_eControllerType_PS4Controller);
 }
 
 SDL_bool
 SDL_IsJoystickPS5(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_PS5Controller;
+    return (eType == k_eControllerType_PS5Controller);
 }
 
 SDL_bool
 SDL_IsJoystickNintendoSwitchPro(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_SwitchProController || eType == k_eControllerType_SwitchInputOnlyController;
+    return (eType == k_eControllerType_SwitchProController ||
+            eType == k_eControllerType_SwitchInputOnlyController);
 }
 
 SDL_bool
 SDL_IsJoystickNintendoSwitchProInputOnly(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_SwitchInputOnlyController;
+    return (eType == k_eControllerType_SwitchInputOnlyController);
 }
 
 SDL_bool
 SDL_IsJoystickNintendoSwitchJoyCon(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_SwitchJoyConLeft || eType == k_eControllerType_SwitchJoyConRight;
+    return (eType == k_eControllerType_SwitchJoyConLeft ||
+            eType == k_eControllerType_SwitchJoyConRight);
 }
 
 SDL_bool
 SDL_IsJoystickNintendoSwitchJoyConLeft(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_SwitchJoyConLeft;
+    return (eType == k_eControllerType_SwitchJoyConLeft);
 }
 
 SDL_bool
 SDL_IsJoystickNintendoSwitchJoyConRight(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_SwitchJoyConRight;
+    return (eType == k_eControllerType_SwitchJoyConRight);
 }
 
 SDL_bool
 SDL_IsJoystickNintendoSwitchJoyConGrip(Uint16 vendor_id, Uint16 product_id)
 {
-    return vendor_id == USB_VENDOR_NINTENDO && product_id == USB_PRODUCT_NINTENDO_SWITCH_JOYCON_GRIP;
+    return (vendor_id == USB_VENDOR_NINTENDO && product_id == USB_PRODUCT_NINTENDO_SWITCH_JOYCON_GRIP);
 }
 
 SDL_bool
 SDL_IsJoystickNintendoSwitchJoyConPair(Uint16 vendor_id, Uint16 product_id)
 {
-    return vendor_id == USB_VENDOR_NINTENDO && product_id == USB_PRODUCT_NINTENDO_SWITCH_JOYCON_PAIR;
+    return (vendor_id == USB_VENDOR_NINTENDO && product_id == USB_PRODUCT_NINTENDO_SWITCH_JOYCON_PAIR);
 }
 
 SDL_bool
 SDL_IsJoystickSteamController(Uint16 vendor_id, Uint16 product_id)
 {
     EControllerType eType = GuessControllerType(vendor_id, product_id);
-    return eType == k_eControllerType_SteamController || eType == k_eControllerType_SteamControllerV2;
+    return (eType == k_eControllerType_SteamController ||
+            eType == k_eControllerType_SteamControllerV2);
 }
 
 SDL_bool

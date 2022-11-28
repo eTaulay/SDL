@@ -19,20 +19,23 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "build_config/SDL_build_config.h"
+#include "SDL_config.h"
 #include "SDL_dynapi.h"
 
 #if SDL_DYNAMIC_API
 
-#ifdef HAVE_STDIO_H
-#include <stdio.h>
+#if defined(__OS2__)
+#define INCL_DOS
+#define INCL_DOSERRORS
+#include <os2.h>
+#include <dos.h>
 #endif
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 
 /* These headers have system specific definitions, so aren't included above */
-#include <SDL3/SDL_syswm.h>
-#include <SDL3/SDL_vulkan.h>
+#include "SDL_syswm.h"
+#include "SDL_vulkan.h"
 
 /* This is the version of the dynamic API. This doesn't match the SDL version
    and should not change until there's been a major revamp in API/ABI.
@@ -43,7 +46,7 @@
    we'll forget to bump every time we add a function, so this is the
    failsafe switch for major API change decisions. Respect it and use it
    sparingly. */
-#define SDL_DYNAPI_VERSION 2
+#define SDL_DYNAPI_VERSION 1
 
 static void SDL_InitDynamicAPI(void);
 
@@ -192,7 +195,7 @@ SDL_DYNAPI_VARARGS(,,)
 static int SDLCALL SDL_SetError_LOGSDLCALLS(SDL_PRINTF_FORMAT_STRING const char *fmt, ...) {
     char buf[512]; /* !!! FIXME: dynamic allocation */ \
     va_list ap;
-    SDL_Log_REAL("SDL3CALL SDL_SetError");
+    SDL_Log_REAL("SDL2CALL SDL_SetError");
     va_start(ap, fmt);
     SDL_vsnprintf_REAL(buf, sizeof (buf), fmt, ap);
     va_end(ap);
@@ -201,7 +204,7 @@ static int SDLCALL SDL_SetError_LOGSDLCALLS(SDL_PRINTF_FORMAT_STRING const char 
 static int SDLCALL SDL_sscanf_LOGSDLCALLS(const char *buf, SDL_SCANF_FORMAT_STRING const char *fmt, ...) {
     int retval;
     va_list ap;
-    SDL_Log_REAL("SDL3CALL SDL_sscanf");
+    SDL_Log_REAL("SDL2CALL SDL_sscanf");
     va_start(ap, fmt);
     retval = SDL_vsscanf_REAL(buf, fmt, ap);
     va_end(ap);
@@ -210,7 +213,7 @@ static int SDLCALL SDL_sscanf_LOGSDLCALLS(const char *buf, SDL_SCANF_FORMAT_STRI
 static int SDLCALL SDL_snprintf_LOGSDLCALLS(SDL_OUT_Z_CAP(maxlen) char *buf, size_t maxlen, SDL_PRINTF_FORMAT_STRING const char *fmt, ...) {
     int retval;
     va_list ap;
-    SDL_Log_REAL("SDL3CALL SDL_snprintf");
+    SDL_Log_REAL("SDL2CALL SDL_snprintf");
     va_start(ap, fmt);
     retval = SDL_vsnprintf_REAL(buf, maxlen, fmt, ap);
     va_end(ap);
@@ -219,7 +222,7 @@ static int SDLCALL SDL_snprintf_LOGSDLCALLS(SDL_OUT_Z_CAP(maxlen) char *buf, siz
 static int SDLCALL SDL_asprintf_LOGSDLCALLS(char **strp, SDL_PRINTF_FORMAT_STRING const char *fmt, ...) {
     int retval;
     va_list ap;
-    SDL_Log_REAL("SDL3CALL SDL_asprintf");
+    SDL_Log_REAL("SDL2CALL SDL_asprintf");
     va_start(ap, fmt);
     retval = SDL_vasprintf_REAL(strp, fmt, ap);
     va_end(ap);
@@ -227,14 +230,14 @@ static int SDLCALL SDL_asprintf_LOGSDLCALLS(char **strp, SDL_PRINTF_FORMAT_STRIN
 }
 static void SDLCALL SDL_Log_LOGSDLCALLS(SDL_PRINTF_FORMAT_STRING const char *fmt, ...) {
     va_list ap;
-    SDL_Log_REAL("SDL3CALL SDL_Log");
+    SDL_Log_REAL("SDL2CALL SDL_Log");
     va_start(ap, fmt);
     SDL_LogMessageV_REAL(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, ap); \
     va_end(ap);
 }
 static void SDLCALL SDL_LogMessage_LOGSDLCALLS(int category, SDL_LogPriority priority, SDL_PRINTF_FORMAT_STRING const char *fmt, ...) {
     va_list ap;
-    SDL_Log_REAL("SDL3CALL SDL_LogMessage");
+    SDL_Log_REAL("SDL2CALL SDL_LogMessage");
     va_start(ap, fmt);
     SDL_LogMessageV_REAL(category, priority, fmt, ap);
     va_end(ap);
@@ -242,7 +245,7 @@ static void SDLCALL SDL_LogMessage_LOGSDLCALLS(int category, SDL_LogPriority pri
 #define SDL_DYNAPI_VARARGS_LOGFN_LOGSDLCALLS(logname, prio) \
     static void SDLCALL SDL_Log##logname##_LOGSDLCALLS(int category, SDL_PRINTF_FORMAT_STRING const char *fmt, ...) { \
         va_list ap; va_start(ap, fmt); \
-        SDL_Log_REAL("SDL3CALL SDL_Log%s", #logname); \
+        SDL_Log_REAL("SDL2CALL SDL_Log%s", #logname); \
         SDL_LogMessageV_REAL(category, SDL_LOG_PRIORITY_##prio, fmt, ap); \
         va_end(ap); \
     }
@@ -253,7 +256,7 @@ SDL_DYNAPI_VARARGS_LOGFN_LOGSDLCALLS(Warn, WARN)
 SDL_DYNAPI_VARARGS_LOGFN_LOGSDLCALLS(Error, ERROR)
 SDL_DYNAPI_VARARGS_LOGFN_LOGSDLCALLS(Critical, CRITICAL)
 #define SDL_DYNAPI_PROC(rc,fn,params,args,ret) \
-    rc SDLCALL fn##_LOGSDLCALLS params { SDL_Log_REAL("SDL3CALL %s", #fn); ret fn##_REAL args; }
+    rc SDLCALL fn##_LOGSDLCALLS params { SDL_Log_REAL("SDL2CALL %s", #fn); ret fn##_REAL args; }
 #define SDL_DYNAPI_PROC_NO_VARARGS 1
 #include "SDL_dynapi_procs.h"
 #undef SDL_DYNAPI_PROC
@@ -338,7 +341,7 @@ static SDL_INLINE void *get_sdlapi_entry(const char *fname, const char *sym)
     return retval;
 }
 
-#elif defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(__HAIKU__)
+#elif defined(unix) || defined(__unix__) || defined(__APPLE__) || defined(__HAIKU__) || defined(__QNX__)
 #include <dlfcn.h>
 static SDL_INLINE void *get_sdlapi_entry(const char *fname, const char *sym)
 {
@@ -351,6 +354,20 @@ static SDL_INLINE void *get_sdlapi_entry(const char *fname, const char *sym)
         }
     }
     return retval;
+}
+
+#elif defined(__OS2__)
+static SDL_INLINE void *get_sdlapi_entry(const char *fname, const char *sym)
+{
+    HMODULE hmodule;
+    PFN retval = NULL;
+    char error[256];
+    if (DosLoadModule(error, sizeof(error), fname, &hmodule) == NO_ERROR) {
+        if (DosQueryProcAddr(hmodule, 0, sym, &retval) != NO_ERROR) {
+            DosFreeModule(hmodule);
+        }
+    }
+    return (void *)retval;
 }
 
 #else

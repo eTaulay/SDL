@@ -32,7 +32,8 @@
 
 #ifdef SDL_VIDEO_DRIVER_X11_DYNAMIC
 
-#include <SDL3/SDL_name.h>
+#include "SDL_name.h"
+#include "SDL_loadso.h"
 
 typedef struct
 {
@@ -77,9 +78,8 @@ X11_GetSym(const char *fnname, int *pHasModule)
     for (i = 0; i < SDL_TABLESIZE(x11libs); i++) {
         if (x11libs[i].lib != NULL) {
             fn = SDL_LoadFunction(x11libs[i].lib, fnname);
-            if (fn != NULL) {
+            if (fn != NULL)
                 break;
-            }
         }
     }
 
@@ -90,9 +90,8 @@ X11_GetSym(const char *fnname, int *pHasModule)
         printf("X11: Symbol '%s' NOT FOUND!\n", fnname);
 #endif
 
-    if (fn == NULL) {
-        *pHasModule = 0; /* kill this module. */
-    }
+    if (fn == NULL)
+        *pHasModule = 0;  /* kill this module. */
 
     return fn;
 }

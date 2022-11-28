@@ -32,7 +32,11 @@
 
 #include <linux/input.h>
 
+#include "SDL_assert.h"
 #include "SDL_evdev_capabilities.h"
+#include "SDL_loadso.h"
+#include "SDL_timer.h"
+#include "SDL_hints.h"
 #include "../unix/SDL_poll.h"
 
 static const char *SDL_UDEV_LIBS[] = { "libudev.so.1", "libudev.so.0" };
@@ -115,7 +119,7 @@ SDL_UDEV_Init(void)
 
     if (_this == NULL) {
         _this = (SDL_UDEV_PrivateData *) SDL_calloc(1, sizeof(*_this));
-        if (_this == NULL) {
+        if(_this == NULL) {
             return SDL_OutOfMemory();
         }
 
@@ -323,13 +327,14 @@ SDL_UDEV_LoadLibrary(void)
 #endif
 
     if (_this->udev_handle == NULL) {
-        for ( i = 0 ; i < SDL_arraysize(SDL_UDEV_LIBS); i++) {
+        for( i = 0 ; i < SDL_arraysize(SDL_UDEV_LIBS); i++) {
             _this->udev_handle = SDL_LoadObject(SDL_UDEV_LIBS[i]);
             if (_this->udev_handle != NULL) {
                 retval = SDL_UDEV_load_syms();
                 if (retval < 0) {
                     SDL_UDEV_UnloadLibrary();
-                } else {
+                }
+                else {
                     break;
                 }
             }
@@ -354,7 +359,7 @@ static void get_caps(struct udev_device *dev, struct udev_device *pdev, const ch
 
     SDL_memset(bitmask, 0, bitmask_len*sizeof(*bitmask));
     value = _this->syms.udev_device_get_sysattr_value(pdev, attr);
-    if (value == NULL) {
+    if (!value) {
         return;
     }
 
@@ -389,7 +394,7 @@ guess_device_class(struct udev_device *dev)
     while (pdev && !_this->syms.udev_device_get_sysattr_value(pdev, "capabilities/ev")) {
         pdev = _this->syms.udev_device_get_parent_with_subsystem_devtype(pdev, "input", NULL);
     }
-    if (pdev == NULL) {
+    if (!pdev) {
         return 0;
     }
 

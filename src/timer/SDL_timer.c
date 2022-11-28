@@ -20,7 +20,10 @@
 */
 #include "../SDL_internal.h"
 
+#include "SDL_timer.h"
 #include "SDL_timer_c.h"
+#include "SDL_atomic.h"
+#include "SDL_cpuinfo.h"
 #include "../thread/SDL_systhread.h"
 
 /* #define DEBUG_TIMERS */
@@ -171,7 +174,7 @@ SDL_TimerThread(void *_data)
                 current->scheduled = tick + interval;
                 SDL_AddTimerInternal(data, current);
             } else {
-                if (freelist_head == NULL) {
+                if (!freelist_head) {
                     freelist_head = current;
                 }
                 if (freelist_tail) {
@@ -299,7 +302,7 @@ SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
         SDL_RemoveTimer(timer->timerID);
     } else {
         timer = (SDL_Timer *)SDL_malloc(sizeof(*timer));
-        if (timer == NULL) {
+        if (!timer) {
             SDL_OutOfMemory();
             return 0;
         }
@@ -312,7 +315,7 @@ SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
     SDL_AtomicSet(&timer->canceled, 0);
 
     entry = (SDL_TimerMap *)SDL_malloc(sizeof(*entry));
-    if (entry == NULL) {
+    if (!entry) {
         SDL_free(timer);
         SDL_OutOfMemory();
         return 0;
@@ -429,7 +432,7 @@ SDL_AddTimer(Uint32 interval, SDL_TimerCallback callback, void *param)
     SDL_TimerMap *entry;
 
     entry = (SDL_TimerMap *)SDL_malloc(sizeof(*entry));
-    if (entry == NULL) {
+    if (!entry) {
         SDL_OutOfMemory();
         return 0;
     }

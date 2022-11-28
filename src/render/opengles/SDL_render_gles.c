@@ -22,8 +22,9 @@
 
 #if SDL_VIDEO_RENDER_OGL_ES && !SDL_RENDER_DISABLED
 
+#include "SDL_hints.h"
 #include "../../video/SDL_sysvideo.h" /* For SDL_GL_SwapWindowWithResult */
-#include <SDL3/SDL_opengles.h>
+#include "SDL_opengles.h"
 #include "../SDL_sysrender.h"
 #include "../../SDL_utils_c.h"
 
@@ -33,6 +34,18 @@
 
 #define RENDERER_CONTEXT_MAJOR 1
 #define RENDERER_CONTEXT_MINOR 1
+
+#if defined(SDL_VIDEO_DRIVER_PANDORA)
+
+/* Empty function stub to get OpenGL ES 1.x support without  */
+/* OpenGL ES extension GL_OES_draw_texture supported         */
+GL_API void GL_APIENTRY
+glDrawTexiOES(GLint x, GLint y, GLint z, GLint width, GLint height)
+{
+    return;
+}
+
+#endif /* SDL_VIDEO_DRIVER_PANDORA */
 
 /* OpenGL ES 1.1 renderer implementation, based on the OpenGL renderer */
 
@@ -140,6 +153,8 @@ static int GLES_LoadFunctions(GLES_RenderData * data)
 #if SDL_VIDEO_DRIVER_UIKIT
 #define __SDL_NOGETPROCADDR__
 #elif SDL_VIDEO_DRIVER_ANDROID
+#define __SDL_NOGETPROCADDR__
+#elif SDL_VIDEO_DRIVER_PANDORA
 #define __SDL_NOGETPROCADDR__
 #endif
 
@@ -314,7 +329,7 @@ GLES_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     }
 
     data = (GLES_TextureData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         return SDL_OutOfMemory();
     }
 
@@ -409,7 +424,7 @@ GLES_UpdateTexture(SDL_Renderer * renderer, SDL_Texture * texture,
     src = (Uint8 *)pixels;
     if (pitch != srcPitch) {
         blob = (Uint8 *)SDL_malloc(srcPitch * rect->h);
-        if (blob == NULL) {
+        if (!blob) {
             return SDL_OutOfMemory();
         }
         src = blob;
@@ -529,7 +544,7 @@ GLES_QueueDrawPoints(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_
     GLfloat *verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, count * 2 * sizeof (GLfloat), 0, &cmd->data.draw.first);
     int i;
 
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
 
@@ -550,7 +565,7 @@ GLES_QueueDrawLines(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_F
     const size_t vertlen = (sizeof (GLfloat) * 2) * count;
     GLfloat *verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, vertlen, 0, &cmd->data.draw.first);
 
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
     cmd->data.draw.count = count;
@@ -596,7 +611,7 @@ GLES_QueueGeometry(SDL_Renderer *renderer, SDL_RenderCommand *cmd, SDL_Texture *
     int sz = 2 + 4 + (texture ? 2 : 0);
 
     verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, count * sz * sizeof (GLfloat), 0, &cmd->data.draw.first);
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
 
@@ -903,7 +918,7 @@ GLES_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
 
     temp_pitch = rect->w * SDL_BYTESPERPIXEL(temp_format);
     temp_pixels = SDL_malloc(rect->h * temp_pitch);
-    if (temp_pixels == NULL) {
+    if (!temp_pixels) {
         return SDL_OutOfMemory();
     }
 
@@ -964,7 +979,7 @@ GLES_DestroyTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         renderdata->drawstate.target = NULL;
     }
 
-    if (data == NULL) {
+    if (!data) {
         return;
     }
     if (data->texture) {
@@ -1080,13 +1095,13 @@ GLES_CreateRenderer(SDL_Window * window, Uint32 flags)
     }
 
     renderer = (SDL_Renderer *) SDL_calloc(1, sizeof(*renderer));
-    if (renderer == NULL) {
+    if (!renderer) {
         SDL_OutOfMemory();
         goto error;
     }
 
     data = (GLES_RenderData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         GLES_DestroyRenderer(renderer);
         SDL_OutOfMemory();
         goto error;

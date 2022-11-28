@@ -22,8 +22,11 @@
 
 #if SDL_AUDIO_DRIVER_JACK
 
+#include "SDL_timer.h"
+#include "SDL_audio.h"
 #include "../SDL_audio_c.h"
 #include "SDL_jackaudio.h"
+#include "SDL_loadso.h"
 #include "../../thread/SDL_systhread.h"
 
 
@@ -310,7 +313,7 @@ JACK_OpenDevice(_THIS, const char *devname)
     }
 
     devports = JACK_jack_get_ports(client, NULL, NULL, JackPortIsPhysical | sysportflags);
-    if (devports == NULL || !devports[0]) {
+    if (!devports || !devports[0]) {
         return SDL_SetError("No physical JACK ports available");
     }
 

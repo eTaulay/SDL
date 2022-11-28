@@ -1,0 +1,14 @@
+CPPFLAGS: -D_FORTIFY_SOURCE=0 -D__USE_MINGW_ANSI_STDIO=1
+CFLAGS: -mthreads -mtune=generic -O2 -pipe
+CXXFLAGS: -mthreads -mtune=generic -O2 -pipe
+LDFLAGS: -pipe -static-libgcc -static-libstdc++
+vcs_reset origin/HEAD
+++ vcs_get_latest_tag origin/HEAD
+++ case $1 in
+++ false
+++ echo origin/HEAD
++ git checkout --no-track -fB ab-suite origin/HEAD
+Switched to a new branch 'ab-suite'
++ git log --oneline --no-merges --no-color -n 1
++ tee /dev/null
+4f5e9fd5b [skip ci] Solaris getexecname() returns argv[0]

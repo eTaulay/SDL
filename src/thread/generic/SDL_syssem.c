@@ -22,6 +22,8 @@
 
 /* An implementation of semaphores using mutexes and condition variables */
 
+#include "SDL_timer.h"
+#include "SDL_thread.h"
 #include "SDL_systhread_c.h"
 
 
@@ -85,7 +87,7 @@ SDL_CreateSemaphore(Uint32 initial_value)
     SDL_sem *sem;
 
     sem = (SDL_sem *) SDL_malloc(sizeof(*sem));
-    if (sem == NULL) {
+    if (!sem) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -129,7 +131,7 @@ SDL_SemTryWait(SDL_sem * sem)
 {
     int retval;
 
-    if (sem == NULL) {
+    if (!sem) {
         return SDL_InvalidParamError("sem");
     }
 
@@ -149,7 +151,7 @@ SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
 {
     int retval;
 
-    if (sem == NULL) {
+    if (!sem) {
         return SDL_InvalidParamError("sem");
     }
 
@@ -197,7 +199,7 @@ SDL_SemValue(SDL_sem * sem)
 int
 SDL_SemPost(SDL_sem * sem)
 {
-    if (sem == NULL) {
+    if (!sem) {
         return SDL_InvalidParamError("sem");
     }
 

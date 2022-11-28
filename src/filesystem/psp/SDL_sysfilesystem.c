@@ -28,6 +28,8 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* System dependent filesystem routines                                */
 
+#include "SDL_error.h"
+#include "SDL_filesystem.h"
 
 char *
 SDL_GetBasePath(void)
@@ -50,11 +52,11 @@ SDL_GetPrefPath(const char *org, const char *app)
     char *retval = NULL;
     size_t len;
     char *base = SDL_GetBasePath();
-    if (app == NULL) {
+    if (!app) {
         SDL_InvalidParamError("app");
         return NULL;
     }
-    if (org == NULL) {
+    if(!org) {
         org = "";
     }
 

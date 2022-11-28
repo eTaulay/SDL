@@ -22,6 +22,7 @@
 
 #if SDL_VIDEO_RENDER_SW && !SDL_RENDER_DISABLED
 
+#include "SDL_surface.h"
 #include "SDL_triangle.h"
 
 #include "../../video/SDL_blit.h"
@@ -519,26 +520,14 @@ int SDL_SW_BlitTriangle(
         maxx = srcrect.x + srcrect.w;
         maxy = srcrect.y + srcrect.h;
         if (srcrect.w > 0) {
-            if (s0->x == maxx) {
-                s0->x--;
-            }
-            if (s1->x == maxx) {
-                s1->x--;
-            }
-            if (s2->x == maxx) {
-                s2->x--;
-            }
+            if (s0->x == maxx) s0->x--;
+            if (s1->x == maxx) s1->x--;
+            if (s2->x == maxx) s2->x--;
         }
         if (srcrect.h > 0) {
-            if (s0->y == maxy) {
-                s0->y--;
-            }
-            if (s1->y == maxy) {
-                s1->y--;
-            }
-            if (s2->y == maxy) {
-                s2->y--;
-            }
+            if (s0->y == maxy) s0->y--;
+            if (s1->y == maxy) s1->y--;
+            if (s2->y == maxy) s2->y--;
         }
     }
 

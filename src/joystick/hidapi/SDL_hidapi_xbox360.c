@@ -22,6 +22,10 @@
 
 #ifdef SDL_JOYSTICK_HIDAPI
 
+#include "SDL_events.h"
+#include "SDL_timer.h"
+#include "SDL_joystick.h"
+#include "SDL_gamecontroller.h"
 #include "../../SDL_hints_c.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
@@ -60,7 +64,9 @@ static SDL_bool
 HIDAPI_DriverXbox360_IsEnabled(void)
 {
     return SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_XBOX_360,
-                              SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_XBOX, SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI, SDL_HIDAPI_DEFAULT)));
+               SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI_XBOX,
+                   SDL_GetHintBoolean(SDL_HINT_JOYSTICK_HIDAPI,
+                       SDL_HIDAPI_DEFAULT)));
 }
 
 static SDL_bool
@@ -81,13 +87,13 @@ HIDAPI_DriverXbox360_IsSupportedDevice(SDL_HIDAPI_Device *device, const char *na
         /* This is the chatpad or other input interface, not the Xbox 360 interface */
         return SDL_FALSE;
     }
-#if defined(__MACOS__) || defined(__WIN32__)
+#if defined(__MACOSX__) || defined(__WIN32__)
     if (vendor_id == USB_VENDOR_MICROSOFT && product_id == 0x028e && version == 1) {
         /* This is the Steam Virtual Gamepad, which isn't supported by this driver */
         return SDL_FALSE;
     }
 #endif
-#if defined(__MACOS__)
+#if defined(__MACOSX__)
     /* Wired Xbox One controllers are handled by this driver, interfacing with
        the 360Controller driver available from:
        https://github.com/360Controller/360Controller/releases
@@ -143,7 +149,7 @@ HIDAPI_DriverXbox360_InitDevice(SDL_HIDAPI_Device *device)
     SDL_DriverXbox360_Context *ctx;
 
     ctx = (SDL_DriverXbox360_Context *)SDL_calloc(1, sizeof(*ctx));
-    if (ctx == NULL) {
+    if (!ctx) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
@@ -203,7 +209,7 @@ HIDAPI_DriverXbox360_OpenJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joyst
 static int
 HIDAPI_DriverXbox360_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
-#ifdef __MACOS__
+#ifdef __MACOSX__
     if (SDL_IsJoystickBluetoothXboxOne(device->vendor_id, device->product_id)) {
         Uint8 rumble_packet[] = { 0x03, 0x0F, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00 };
 
@@ -214,7 +220,7 @@ HIDAPI_DriverXbox360_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joy
             return SDL_SetError("Couldn't send rumble packet");
         }
     } else {
-        /* On macOS the 360Controller driver uses this short report,
+        /* On Mac OS X the 360Controller driver uses this short report,
            and we need to prefix it with a magic token so hidapi passes it through untouched
          */
         Uint8 rumble_packet[] = { 'M', 'A', 'G', 'I', 'C', '0', 0x00, 0x04, 0x00, 0x00 };
@@ -274,7 +280,7 @@ static void
 HIDAPI_DriverXbox360_HandleStatePacket(SDL_Joystick *joystick, SDL_DriverXbox360_Context *ctx, Uint8 *data, int size)
 {
     Sint16 axis;
-#ifdef __MACOS__
+#ifdef __MACOSX__
     const SDL_bool invert_y_axes = SDL_FALSE;
 #else
     const SDL_bool invert_y_axes = SDL_TRUE;
@@ -341,7 +347,7 @@ HIDAPI_DriverXbox360_UpdateDevice(SDL_HIDAPI_Device *device)
 #ifdef DEBUG_XBOX_PROTOCOL
         HIDAPI_DumpPacket("Xbox 360 packet: size = %d", data, size);
 #endif
-        if (joystick == NULL) {
+        if (!joystick) {
             continue;
         }
 
@@ -354,7 +360,7 @@ HIDAPI_DriverXbox360_UpdateDevice(SDL_HIDAPI_Device *device)
         /* Read error, device is disconnected */
         HIDAPI_JoystickDisconnected(device, device->joysticks[0]);
     }
-    return size >= 0;
+    return (size >= 0);
 }
 
 static void

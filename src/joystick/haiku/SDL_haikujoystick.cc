@@ -30,6 +30,7 @@
 extern "C"
 {
 
+#include "SDL_joystick.h"
 #include "../SDL_sysjoystick.h"
 #include "../SDL_joystick_c.h"
 
@@ -67,7 +68,8 @@ extern "C"
         numjoysticks = 0;
         SDL_memset(SDL_joyport, 0, (sizeof SDL_joyport));
         SDL_memset(SDL_joyname, 0, (sizeof SDL_joyname));
-        for (i = 0; (numjoysticks < MAX_JOYSTICKS) && (i < nports); ++i) {
+        for (i = 0; (numjoysticks < MAX_JOYSTICKS) && (i < nports); ++i)
+        {
             if (joystick.GetDeviceName(i, name) == B_OK) {
                 if (joystick.Open(name) != B_ERROR) {
                       BString stick_name;

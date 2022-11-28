@@ -31,6 +31,7 @@
 
 #include "../SDL_sysvideo.h"
 
+#include "SDL_mouse.h"
 #include "../../events/SDL_mouse_c.h"
 #include "SDL_waylandvideo.h"
 #include "../SDL_pixels_c.h"
@@ -39,6 +40,7 @@
 #include "wayland-cursor.h"
 #include "SDL_waylandmouse.h"
 
+#include "SDL_hints.h"
 #include "../../SDL_hints_c.h"
 
 static int
@@ -116,7 +118,7 @@ wayland_dbus_read_cursor_size(int *size)
     DBusMessage *reply;
     SDL_DBusContext *dbus = SDL_DBus_GetContext();
 
-    if (dbus == NULL || size == NULL) {
+    if (!dbus || !size) {
         return SDL_FALSE;
     }
 
@@ -139,7 +141,7 @@ wayland_dbus_read_cursor_theme(char **theme)
     DBusMessage *reply;
     SDL_DBusContext *dbus = SDL_DBus_GetContext();
 
-    if (dbus == NULL || theme == NULL) {
+    if (!dbus || !theme) {
         return SDL_FALSE;
     }
 
@@ -295,7 +297,7 @@ wayland_create_tmp_file(off_t size)
     int fd;
 
     xdg_path = SDL_getenv("XDG_RUNTIME_DIR");
-    if (xdg_path == NULL) {
+    if (!xdg_path) {
         return -1;
     }
 
@@ -303,9 +305,8 @@ wayland_create_tmp_file(off_t size)
     SDL_strlcat(tmp_path, template, PATH_MAX);
 
     fd = mkostemp(tmp_path, O_CLOEXEC);
-    if (fd < 0) {
+    if (fd < 0)
         return -1;
-    }
 
     if (ftruncate(fd, size) < 0) {
         close(fd);
@@ -340,7 +341,8 @@ create_buffer_from_shm(Wayland_CursorData *d,
     int shm_fd;
 
     shm_fd = wayland_create_tmp_file(size);
-    if (shm_fd < 0) {
+    if (shm_fd < 0)
+    {
         return SDL_SetError("Creating mouse cursor buffer failed.");
     }
 
@@ -385,7 +387,7 @@ Wayland_CreateCursor(SDL_Surface *surface, int hot_x, int hot_y)
         SDL_VideoDevice *vd = SDL_GetVideoDevice ();
         SDL_VideoData *wd = (SDL_VideoData *) vd->driverdata;
         Wayland_CursorData *data = SDL_calloc (1, sizeof (Wayland_CursorData));
-        if (data == NULL) {
+        if (!data) {
             SDL_OutOfMemory();
             SDL_free(cursor);
             return NULL;
@@ -431,7 +433,7 @@ Wayland_CreateSystemCursor(SDL_SystemCursor id)
     cursor = SDL_calloc(1, sizeof (*cursor));
     if (cursor) {
         Wayland_CursorData *cdata = SDL_calloc (1, sizeof (Wayland_CursorData));
-        if (cdata == NULL) {
+        if (!cdata) {
             SDL_OutOfMemory();
             SDL_free(cursor);
             return NULL;
@@ -477,7 +479,7 @@ Wayland_FreeCursorData(Wayland_CursorData *d)
 static void
 Wayland_FreeCursor(SDL_Cursor *cursor)
 {
-    if (cursor == NULL) {
+    if (!cursor) {
         return;
     }
 
@@ -502,11 +504,11 @@ Wayland_ShowCursor(SDL_Cursor *cursor)
     struct wl_pointer *pointer = d->pointer;
     float scale = 1.0f;
 
-    if (pointer == NULL) {
+    if (!pointer)
         return -1;
-    }
 
-    if (cursor) {
+    if (cursor)
+    {
         Wayland_CursorData *data = cursor->driverdata;
 
         /* TODO: High-DPI custom cursors? -flibit */
@@ -533,7 +535,9 @@ Wayland_ShowCursor(SDL_Cursor *cursor)
             input->relative_mode_override = SDL_FALSE;
         }
 	    
-    } else {
+    }
+    else
+    {
         input->cursor_visible = SDL_FALSE;
         wl_pointer_set_cursor(pointer, input->pointer_enter_serial, NULL, 0, 0);
     }
@@ -575,9 +579,8 @@ Wayland_SetRelativeMouseMode(SDL_bool enabled)
 
     if (enabled) {
         /* Disable mouse warp emulation if it's enabled. */
-        if (data->input->relative_mode_override) {
+        if (data->input->relative_mode_override)
             data->input->relative_mode_override = SDL_FALSE;
-        }
 
         /* If the app has used relative mode before, it probably shouldn't
          * also be emulating it using repeated mouse warps, so disable

@@ -11,7 +11,8 @@
 */
 /* Simple test of power subsystem. */
 
-#include <SDL3/SDL.h>
+#include <stdio.h>
+#include "SDL.h"
 
 static void
 report_power(void)
@@ -77,5 +78,3 @@ main(int argc, char *argv[])
 }
 
 /* end of testpower.c ... */
-
-/* vi: set ts=4 sw=4 expandtab: */

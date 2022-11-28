@@ -33,6 +33,10 @@
 
 #if SDL_JOYSTICK_RAWINPUT
 
+#include "SDL_endian.h"
+#include "SDL_events.h"
+#include "SDL_hints.h"
+#include "SDL_timer.h"
 #include "../usb_ids.h"
 #include "../SDL_sysjoystick.h"
 #include "../../core/windows/SDL_windows.h"
@@ -254,9 +258,8 @@ static void RAWINPUT_FillMatchState(WindowsMatchState *state, Uint64 match_state
         ((match_state & (1<<SDL_CONTROLLER_BUTTON_DPAD_RIGHT)) ? XINPUT_GAMEPAD_DPAD_RIGHT : 0);
     */
 
-    if (state->xinput_buttons) {
+    if (state->xinput_buttons)
         state->any_data = SDL_TRUE;
-    }
 #endif
 
 #ifdef SDL_JOYSTICK_RAWINPUT_WGI
@@ -293,9 +296,8 @@ static void RAWINPUT_FillMatchState(WindowsMatchState *state, Uint64 match_state
         ((match_state & (1<<SDL_CONTROLLER_BUTTON_DPAD_LEFT)) ? GamepadButtons_DPadLeft : 0) |
         ((match_state & (1<<SDL_CONTROLLER_BUTTON_DPAD_RIGHT)) ? GamepadButtons_DPadRight : 0); */
 
-    if (state->wgi_buttons) {
+    if (state->wgi_buttons)
         state->any_data = SDL_TRUE;
-    }
 #endif
 
 }
@@ -469,13 +471,11 @@ static void
 RAWINPUT_UpdateWindowsGamingInput()
 {
     int ii;
-    if (!wgi_state.gamepad_statics) {
+    if (!wgi_state.gamepad_statics)
         return;
-    }
 
-    if (!wgi_state.dirty) {
+    if (!wgi_state.dirty)
         return;
-    }
 
     wgi_state.dirty = SDL_FALSE;
 
@@ -519,7 +519,7 @@ RAWINPUT_UpdateWindowsGamingInput()
                                 return;
                             }
                             gamepad_state = SDL_calloc(1, sizeof(*gamepad_state));
-                            if (gamepad_state == NULL) {
+                            if (!gamepad_state) {
                                 SDL_OutOfMemory();
                                 return;
                             }
@@ -702,9 +702,8 @@ RAWINPUT_DeviceFromHandle(HANDLE hDevice)
     SDL_RAWINPUT_Device *curr;
 
     for (curr = SDL_RAWINPUT_devices; curr; curr = curr->next) {
-        if (curr->hDevice == hDevice) {
+        if (curr->hDevice == hDevice)
             return curr;
-        }
     }
     return NULL;
 }
@@ -712,7 +711,7 @@ RAWINPUT_DeviceFromHandle(HANDLE hDevice)
 static void
 RAWINPUT_AddDevice(HANDLE hDevice)
 {
-#define CHECK(expression) { if (!(expression)) goto err; }
+#define CHECK(expression) { if(!(expression)) goto err; }
     SDL_RAWINPUT_Device *device = NULL;
     SDL_RAWINPUT_Device *curr, *last;
     RID_DEVICE_INFO rdi;
@@ -1077,7 +1076,7 @@ RAWINPUT_JoystickOpen(SDL_Joystick *joystick, int device_index)
     ULONG i;
 
     ctx = (RAWINPUT_DeviceContext *)SDL_calloc(1, sizeof(RAWINPUT_DeviceContext));
-    if (ctx == NULL) {
+    if (!ctx) {
         return SDL_OutOfMemory();
     }
     joystick->hwdata = ctx;
@@ -1090,7 +1089,7 @@ RAWINPUT_JoystickOpen(SDL_Joystick *joystick, int device_index)
 #ifdef SDL_JOYSTICK_RAWINPUT_XINPUT
         xinput_device_change = SDL_TRUE;
         ctx->xinput_enabled = SDL_GetHintBoolean(SDL_HINT_JOYSTICK_RAWINPUT_CORRELATE_XINPUT, SDL_TRUE);
-        if (ctx->xinput_enabled && (WIN_LoadXInputDLL() < 0 || XINPUTGETSTATE == NULL)) {
+        if (ctx->xinput_enabled && (WIN_LoadXInputDLL() < 0 || !XINPUTGETSTATE)) {
             ctx->xinput_enabled = SDL_FALSE;
         }
         ctx->xinput_slot = XUSER_INDEX_ANY;
@@ -1286,7 +1285,7 @@ RAWINPUT_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uin
     if (!rumbled && ctx->xinput_correlated) {
         XINPUT_VIBRATION XVibration;
 
-        if (XINPUTSETSTATE == NULL) {
+        if (!XINPUTSETSTATE) {
             return SDL_Unsupported();
         }
 
@@ -1639,12 +1638,10 @@ RAWINPUT_UpdateOtherAPIs(SDL_Joystick *joystick)
                             correlated = SDL_TRUE;
                             RAWINPUT_MarkWindowsGamingInputSlotUsed(ctx->wgi_slot, ctx);
                             /* If the generalized Guide button was using us, it doesn't need to anymore */
-                            if (guide_button_candidate.joystick == joystick) {
+                            if (guide_button_candidate.joystick == joystick)
                                 guide_button_candidate.joystick = NULL;
-                            }
-                            if (guide_button_candidate.last_joystick == joystick) {
+                            if (guide_button_candidate.last_joystick == joystick)
                                 guide_button_candidate.last_joystick = NULL;
-                            }
                         }
                     } else {
                         /* someone else also possibly correlated to this device, start over */
@@ -1735,12 +1732,10 @@ RAWINPUT_UpdateOtherAPIs(SDL_Joystick *joystick)
                                 correlated = SDL_TRUE;
                                 RAWINPUT_MarkXInputSlotUsed(ctx->xinput_slot);
                                 /* If the generalized Guide button was using us, it doesn't need to anymore */
-                                if (guide_button_candidate.joystick == joystick) {
+                                if (guide_button_candidate.joystick == joystick)
                                     guide_button_candidate.joystick = NULL;
-                                }
-                                if (guide_button_candidate.last_joystick == joystick) {
+                                if (guide_button_candidate.last_joystick == joystick)
                                     guide_button_candidate.last_joystick = NULL;
-                                }
                             }
                         } else {
                             /* someone else also possibly correlated to this device, start over */
@@ -1852,12 +1847,10 @@ RAWINPUT_JoystickClose(SDL_Joystick *joystick)
     RAWINPUT_DeviceContext *ctx = joystick->hwdata;
 
 #ifdef SDL_JOYSTICK_RAWINPUT_MATCHING
-    if (guide_button_candidate.joystick == joystick) {
+    if (guide_button_candidate.joystick == joystick)
         guide_button_candidate.joystick = NULL;
-    }
-    if (guide_button_candidate.last_joystick == joystick) {
+    if (guide_button_candidate.last_joystick == joystick)
         guide_button_candidate.last_joystick = NULL;
-    }
 #endif
 
     if (ctx) {

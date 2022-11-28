@@ -22,7 +22,9 @@
 
 #ifdef SDL_HAPTIC_LINUX
 
+#include "SDL_haptic.h"
 #include "../SDL_syshaptic.h"
+#include "SDL_joystick.h"
 #include "../../joystick/SDL_sysjoystick.h"     /* For the real SDL_Joystick */
 #include "../../joystick/linux/SDL_sysjoystick_c.h"     /* For joystick hwdata */
 #include "../../core/linux/SDL_evdev_capabilities.h"
@@ -34,6 +36,11 @@
 #include <limits.h>             /* INT_MAX */
 #include <errno.h>              /* errno, strerror */
 #include <sys/stat.h>           /* stat */
+
+/* Just in case. */
+#ifndef M_PI
+#  define M_PI     3.14159265358979323846
+#endif
 
 
 #define MAX_HAPTICS  32         /* It's doubtful someone has more then 32 evdev */
@@ -78,10 +85,8 @@ static SDL_hapticlist_item *SDL_hapticlist = NULL;
 static SDL_hapticlist_item *SDL_hapticlist_tail = NULL;
 static int numhaptics = 0;
 
-#define EV_TEST(ev,f)                \
-   if (test_bit((ev), features)) {   \
-       ret |= (f);                   \
-   }
+#define EV_TEST(ev,f) \
+   if (test_bit((ev), features)) ret |= (f);
 /*
  * Test whether a device has haptic properties.
  * Returns available properties or 0 if there are none.
@@ -716,7 +721,7 @@ SDL_SYS_ToDirection(Uint16 *dest, SDL_HapticDirection * src)
                       --> add 45000 in total
                       --> finally convert to [0,0xFFFF] as in case SDL_HAPTIC_POLAR.
                     */
-                tmp = (((Sint32) (f * 18000.0 / SDL_PI_D)) + 45000) % 36000;
+                tmp = (((Sint32) (f * 18000. / M_PI)) + 45000) % 36000;
             tmp = (tmp * 0x8000) / 18000; /* convert to range [0,0xFFFF] */
             *dest = (Uint16) tmp;
         }
@@ -755,9 +760,8 @@ SDL_SYS_ToFFEffect(struct ff_effect *dest, SDL_HapticEffect * src)
 
         /* Header */
         dest->type = FF_CONSTANT;
-        if (SDL_SYS_ToDirection(&dest->direction, &constant->direction) == -1) {
+        if (SDL_SYS_ToDirection(&dest->direction, &constant->direction) == -1)
             return -1;
-        }
 
         /* Replay */
         dest->replay.length = (constant->length == SDL_HAPTIC_INFINITY) ?
@@ -791,9 +795,8 @@ SDL_SYS_ToFFEffect(struct ff_effect *dest, SDL_HapticEffect * src)
 
         /* Header */
         dest->type = FF_PERIODIC;
-        if (SDL_SYS_ToDirection(&dest->direction, &periodic->direction) == -1) {
+        if (SDL_SYS_ToDirection(&dest->direction, &periodic->direction) == -1)
             return -1;
-        }
 
         /* Replay */
         dest->replay.length = (periodic->length == SDL_HAPTIC_INFINITY) ?
@@ -805,18 +808,17 @@ SDL_SYS_ToFFEffect(struct ff_effect *dest, SDL_HapticEffect * src)
         dest->trigger.interval = CLAMP(periodic->interval);
 
         /* Periodic */
-        if (periodic->type == SDL_HAPTIC_SINE) {
+        if (periodic->type == SDL_HAPTIC_SINE)
             dest->u.periodic.waveform = FF_SINE;
         /* !!! FIXME: put this back when we have more bits in 2.1 */
         /* else if (periodic->type == SDL_HAPTIC_SQUARE)
             dest->u.periodic.waveform = FF_SQUARE; */
-        } else if (periodic->type == SDL_HAPTIC_TRIANGLE) {
+        else if (periodic->type == SDL_HAPTIC_TRIANGLE)
             dest->u.periodic.waveform = FF_TRIANGLE;
-        } else if (periodic->type == SDL_HAPTIC_SAWTOOTHUP) {
+        else if (periodic->type == SDL_HAPTIC_SAWTOOTHUP)
             dest->u.periodic.waveform = FF_SAW_UP;
-        } else if (periodic->type == SDL_HAPTIC_SAWTOOTHDOWN) {
+        else if (periodic->type == SDL_HAPTIC_SAWTOOTHDOWN)
             dest->u.periodic.waveform = FF_SAW_DOWN;
-        }
         dest->u.periodic.period = CLAMP(periodic->period);
         dest->u.periodic.magnitude = periodic->magnitude;
         dest->u.periodic.offset = periodic->offset;
@@ -840,16 +842,14 @@ SDL_SYS_ToFFEffect(struct ff_effect *dest, SDL_HapticEffect * src)
         condition = &src->condition;
 
         /* Header */
-        if (condition->type == SDL_HAPTIC_SPRING) {
+        if (condition->type == SDL_HAPTIC_SPRING)
             dest->type = FF_SPRING;
-        } else if (condition->type == SDL_HAPTIC_DAMPER) {
+        else if (condition->type == SDL_HAPTIC_DAMPER)
             dest->type = FF_DAMPER;
-        } else if (condition->type == SDL_HAPTIC_INERTIA) {
+        else if (condition->type == SDL_HAPTIC_INERTIA)
             dest->type = FF_INERTIA;
-        } else if (condition->type == SDL_HAPTIC_FRICTION) {
+        else if (condition->type == SDL_HAPTIC_FRICTION)
             dest->type = FF_FRICTION;
-        }
-        
         dest->direction = 0;    /* Handled by the condition-specifics. */
 
         /* Replay */
@@ -888,9 +888,8 @@ SDL_SYS_ToFFEffect(struct ff_effect *dest, SDL_HapticEffect * src)
 
         /* Header */
         dest->type = FF_RAMP;
-        if (SDL_SYS_ToDirection(&dest->direction, &ramp->direction) == -1) {
+        if (SDL_SYS_ToDirection(&dest->direction, &ramp->direction) == -1)
             return -1;
-        }
 
         /* Replay */
         dest->replay.length = (ramp->length == SDL_HAPTIC_INFINITY) ?

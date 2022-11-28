@@ -21,6 +21,7 @@
 #include "../../SDL_internal.h"
 
 extern "C" {
+#include "SDL_thread.h"
 }
 
 #include <chrono>
@@ -68,7 +69,7 @@ extern "C"
 int
 SDL_CondSignal(SDL_cond * cond)
 {
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     }
 
@@ -81,7 +82,7 @@ extern "C"
 int
 SDL_CondBroadcast(SDL_cond * cond)
 {
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     }
 
@@ -131,7 +132,7 @@ SDL_CondWaitTimeout(SDL_cond * cond, SDL_mutex * mutex, Uint32 ms)
             cpp_lock.release();
             return 0;
         } else {
-            auto wait_result = cond->cpp_cond.wait_for (
+            auto wait_result = cond->cpp_cond.wait_for(
                 cpp_lock,
                 std::chrono::duration<Uint32, std::milli>(ms)
                 );

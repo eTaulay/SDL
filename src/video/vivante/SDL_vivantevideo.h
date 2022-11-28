@@ -25,7 +25,7 @@
 #include "../../SDL_internal.h"
 #include "../SDL_sysvideo.h"
 
-#include <SDL3/SDL_egl.h>
+#include "SDL_egl.h"
 
 #if SDL_VIDEO_DRIVER_VIVANTE_VDK
 #include <gc_vdk.h>
@@ -80,7 +80,8 @@ void VIVANTE_HideWindow(_THIS, SDL_Window * window);
 void VIVANTE_DestroyWindow(_THIS, SDL_Window * window);
 
 /* Window manager function */
-int VIVANTE_GetWindowWMInfo(_THIS, SDL_Window *window, struct SDL_SysWMinfo *info);
+SDL_bool VIVANTE_GetWindowWMInfo(_THIS, SDL_Window * window,
+                             struct SDL_SysWMinfo *info);
 
 /* Event functions */
 void VIVANTE_PumpEvents(_THIS);

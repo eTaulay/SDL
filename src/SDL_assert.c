@@ -24,6 +24,11 @@
 #include "core/windows/SDL_windows.h"
 #endif
 
+#include "SDL.h"
+#include "SDL_atomic.h"
+#include "SDL_messagebox.h"
+#include "SDL_video.h"
+#include "SDL_assert.h"
 #include "SDL_assert_c.h"
 #include "video/SDL_sysvideo.h"
 
@@ -31,6 +36,9 @@
 #ifndef WS_OVERLAPPEDWINDOW
 #define WS_OVERLAPPEDWINDOW 0
 #endif
+#else  /* fprintf, etc. */
+#include <stdio.h>
+#include <stdlib.h>
 #endif
 
 #if defined(__EMSCRIPTEN__)
@@ -244,7 +252,10 @@ SDL_PromptAssertion(const SDL_assert_data *data, void *userdata)
         } else {
             state = (SDL_assert_state)selected;
         }
-    } else {
+    }
+
+    else
+    {
 #if defined(__EMSCRIPTEN__)
         /* This is nasty, but we can't block on a custom UI. */
         for ( ; ; ) {

@@ -23,6 +23,7 @@
 
 #if SDL_VIDEO_DRIVER_WAYLAND
 
+#include "SDL.h"
 #include <stdlib.h> /* fgets */
 #include <stdio.h> /* FILE, STDOUT_FILENO, fdopen, fclose */
 #include <unistd.h> /* pid_t, pipe, fork, close, dup2, execvp, _exit */
@@ -139,14 +140,14 @@ Wayland_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
                         }
                     }
                     output = SDL_malloc(output_len + 1);
-                    if (output == NULL) {
+                    if (!output) {
                         close(fd_pipe[0]);
                         return SDL_OutOfMemory();
                     }
                     output[0] = '\0';
 
                     outputfp = fdopen(fd_pipe[0], "r");
-                    if (outputfp == NULL) {
+                    if (!outputfp) {
                         SDL_free(output);
                         close(fd_pipe[0]);
                         return SDL_SetError("Couldn't open pipe for reading: %s", strerror(errno));

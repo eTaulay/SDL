@@ -12,12 +12,14 @@
 /* Simple program:  Move N sprites around on the screen as fast as possible */
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL_test_common.h>
+#include "SDL_test_common.h"
 #include "testutils.h"
 
 #define WINDOW_WIDTH    640
@@ -87,9 +89,8 @@ loop()
         SDLTest_CommonEvent(state, &event, &done);
     }
     for (i = 0; i < state->num_windows; ++i) {
-        if (state->windows[i] == NULL) {
+        if (state->windows[i] == NULL)
             continue;
-        }
         Draw(&drawstates[i]);
     }
 #ifdef __EMSCRIPTEN__
@@ -111,7 +112,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
 

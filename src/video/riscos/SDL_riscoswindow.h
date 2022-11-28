@@ -34,7 +34,8 @@ typedef struct
 
 extern int RISCOS_CreateWindow(_THIS, SDL_Window * window);
 extern void RISCOS_DestroyWindow(_THIS, SDL_Window * window);
-extern int RISCOS_GetWindowWMInfo(_THIS, SDL_Window *window, struct SDL_SysWMinfo *info);
+extern SDL_bool RISCOS_GetWindowWMInfo(_THIS, SDL_Window * window,
+                                    struct SDL_SysWMinfo *info);
 
 #endif /* SDL_riscoswindow_h_ */
 

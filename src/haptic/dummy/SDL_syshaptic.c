@@ -22,6 +22,7 @@
 
 #if defined(SDL_HAPTIC_DUMMY) || defined(SDL_HAPTIC_DISABLED)
 
+#include "SDL_haptic.h"
 #include "../SDL_syshaptic.h"
 
 

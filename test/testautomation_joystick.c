@@ -2,8 +2,8 @@
  * Joystick test suite
  */
 
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_test.h>
+#include "SDL.h"
+#include "SDL_test.h"
 #include "../src/joystick/usb_ids.h"
 
 /* ================= Test Case Implementation ================== */
@@ -88,5 +88,3 @@ SDLTest_TestSuiteReference joystickTestSuite = {
     joystickTests,
     NULL
 };
-
-/* vi: set ts=4 sw=4 expandtab: */

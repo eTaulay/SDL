@@ -25,6 +25,7 @@
 
 #include "../SDL_internal.h"
 
+#include "SDL_stdinc.h"
 
 #if defined(HAVE_QSORT)
 void

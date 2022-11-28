@@ -23,6 +23,7 @@
 #ifndef SDL_x11video_h_
 #define SDL_x11video_h_
 
+#include "SDL_keycode.h"
 
 #include "../SDL_sysvideo.h"
 

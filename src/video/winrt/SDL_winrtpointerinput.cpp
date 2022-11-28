@@ -26,6 +26,7 @@
 #include "SDL_winrtevents_c.h"
 #include "SDL_winrtmouse_c.h"
 #include "SDL_winrtvideo_cpp.h"
+#include "SDL_system.h"
 
 extern "C" {
 #include "../SDL_sysvideo.h"

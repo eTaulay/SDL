@@ -48,65 +48,14 @@
 #define DECLSPEC
 #endif
 
-#include "build_config/SDL_build_config.h"
-
-#ifdef __APPLE__
-#ifndef _DARWIN_C_SOURCE
-#define _DARWIN_C_SOURCE 1 /* for memset_pattern4() */
-#endif
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if defined(HAVE_STDLIB_H)
-# include <stdlib.h>
-#elif defined(HAVE_MALLOC_H)
-# include <malloc.h>
-#endif
-#if defined(HAVE_STDDEF_H)
-# include <stddef.h>
-#endif
-#if defined(HAVE_STDARG_H)
-# include <stdarg.h>
-#endif
-#ifdef HAVE_STRING_H
-# ifdef HAVE_MEMORY_H
-#  include <memory.h>
-# endif
-# include <string.h>
-#endif
-#ifdef HAVE_STRINGS_H
-# include <strings.h>
-#endif
-#ifdef HAVE_WCHAR_H
-# include <wchar.h>
-#endif
-#if defined(HAVE_INTTYPES_H)
-# include <inttypes.h>
-#elif defined(HAVE_STDINT_H)
-# include <stdint.h>
-#endif
-#ifdef HAVE_CTYPE_H
-# include <ctype.h>
-#endif
-#ifdef HAVE_MATH_H
-# include <math.h>
-#endif
-#ifdef HAVE_FLOAT_H
-# include <float.h>
-#endif
-
+#include "SDL_config.h"
 
 /* If you run into a warning that O_CLOEXEC is redefined, update the SDL configuration header for your platform to add HAVE_O_CLOEXEC */
 #ifndef HAVE_O_CLOEXEC
 #define O_CLOEXEC                       0
 #endif
 
-/* A few #defines to reduce SDL footprint.
+/* A few #defines to reduce SDL2 footprint.
    Only effective when library is statically linked.
    You have to manually edit this file. */
 #ifndef SDL_LEAN_AND_MEAN
@@ -171,7 +120,8 @@
 #define SDL_HAVE_YUV                    !SDL_LEAN_AND_MEAN
 #endif
 
-#include <SDL3/SDL.h>
+#include "SDL_assert.h"
+#include "SDL_log.h"
 
 #endif /* SDL_internal_h_ */
 

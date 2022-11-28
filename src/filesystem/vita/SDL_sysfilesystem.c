@@ -34,6 +34,10 @@
 #include <limits.h>
 #include <fcntl.h>
 
+#include "SDL_error.h"
+#include "SDL_stdinc.h"
+#include "SDL_filesystem.h"
+#include "SDL_rwops.h"
 
 char *
 SDL_GetBasePath(void)
@@ -51,11 +55,11 @@ SDL_GetPrefPath(const char *org, const char *app)
     char *ptr = NULL;
     size_t len = 0;
 
-    if (app == NULL) {
+    if (!app) {
         SDL_InvalidParamError("app");
         return NULL;
     }
-    if (org == NULL) {
+    if (!org) {
         org = "";
     }
 
@@ -63,7 +67,7 @@ SDL_GetPrefPath(const char *org, const char *app)
 
     len += SDL_strlen(org) + SDL_strlen(app) + 3;
     retval = (char *) SDL_malloc(len);
-    if (retval == NULL) {
+    if (!retval) {
         SDL_OutOfMemory();
         return NULL;
     }

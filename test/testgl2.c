@@ -9,13 +9,20 @@
   including commercial applications, and to alter it and redistribute it
   freely.
 */
-#include <SDL3/SDL_test_common.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#include "SDL_test_common.h"
+
+#ifdef __MACOS__
+#define HAVE_OPENGL
+#endif
 
 #ifdef HAVE_OPENGL
 
-#include <stdlib.h>
-
-#include <SDL3/SDL_opengl.h>
+#include "SDL_opengl.h"
 
 typedef struct GL_Context
 {
@@ -37,6 +44,8 @@ static int LoadContext(GL_Context * data)
 #if SDL_VIDEO_DRIVER_UIKIT
 #define __SDL_NOGETPROCADDR__
 #elif SDL_VIDEO_DRIVER_ANDROID
+#define __SDL_NOGETPROCADDR__
+#elif SDL_VIDEO_DRIVER_PANDORA
 #define __SDL_NOGETPROCADDR__
 #endif
 
@@ -220,7 +229,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
     for (i = 1; i < argc;) {
@@ -396,9 +405,8 @@ main(int argc, char *argv[])
 
         for (i = 0; i < state->num_windows; ++i) {
             int w, h;
-            if (state->windows[i] == NULL) {
+            if (state->windows[i] == NULL)
                 continue;
-            }
             SDL_GL_MakeCurrent(state->windows[i], context);
             if (update_swap_interval) {
                 SDL_GL_SetSwapInterval(swap_interval);
@@ -430,5 +438,3 @@ main(int argc, char *argv[])
 }
 
 #endif /* HAVE_OPENGL */
-
-/* vi: set ts=4 sw=4 expandtab: */

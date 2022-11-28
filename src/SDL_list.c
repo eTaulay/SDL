@@ -20,6 +20,7 @@
 */
 #include "./SDL_internal.h"
 
+#include "SDL.h"
 #include "./SDL_list.h"
 
 /* Push */

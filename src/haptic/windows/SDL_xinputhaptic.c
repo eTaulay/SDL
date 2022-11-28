@@ -20,10 +20,15 @@
 */
 #include "../../SDL_internal.h"
 
+#include "SDL.h"
+#include "SDL_error.h"
+#include "SDL_haptic.h"
 #include "../SDL_syshaptic.h"
 
 #if SDL_HAPTIC_XINPUT
 
+#include "SDL_hints.h"
+#include "SDL_timer.h"
 #include "SDL_windowshaptic_c.h"
 #include "SDL_xinputhaptic_c.h"
 #include "../../core/windows/SDL_xinput.h"
@@ -228,7 +233,7 @@ SDL_XINPUT_HapticOpen(SDL_Haptic * haptic, SDL_hapticlist_item *item)
 int
 SDL_XINPUT_JoystickSameHaptic(SDL_Haptic * haptic, SDL_Joystick * joystick)
 {
-    return haptic->hwdata->userid == joystick->hwdata->userid;
+    return (haptic->hwdata->userid == joystick->hwdata->userid);
 }
 
 int

@@ -20,6 +20,7 @@
 */
 #include "../SDL_internal.h"
 
+#include "SDL_rect.h"
 #include "SDL_rect_c.h"
 
 /* There's no float version of this at the moment, because it's not a public API
@@ -38,10 +39,10 @@ SDL_GetSpanEnclosingRect(int width, int height,
     } else if (height < 1) {
         SDL_InvalidParamError("height");
         return SDL_FALSE;
-    } else if (rects == NULL) {
+    } else if (!rects) {
         SDL_InvalidParamError("rects");
         return SDL_FALSE;
-    } else if (span == NULL) {
+    } else if (!span) {
         SDL_InvalidParamError("span");
         return SDL_FALSE;
     } else if (numrects < 1) {

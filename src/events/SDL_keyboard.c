@@ -22,6 +22,9 @@
 
 /* General keyboard handling code for SDL */
 
+#include "SDL_hints.h"
+#include "SDL_timer.h"
+#include "SDL_events.h"
 #include "SDL_events_c.h"
 #include "../video/SDL_sysvideo.h"
 #include "scancodes_ascii.h"
@@ -751,7 +754,7 @@ SDL_SetKeyboardFocus(SDL_Window * window)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
 
-    if (keyboard->focus && window == NULL) {
+    if (keyboard->focus && !window) {
         /* We won't get anymore keyboard messages, so reset keyboard state */
         SDL_ResetKeyboard();
     }
@@ -760,7 +763,7 @@ SDL_SetKeyboardFocus(SDL_Window * window)
     if (keyboard->focus && keyboard->focus != window) {
 
         /* new window shouldn't think it has mouse captured. */
-        SDL_assert(window == NULL || !(window->flags & SDL_WINDOW_MOUSE_CAPTURE));
+        SDL_assert(!window || !(window->flags & SDL_WINDOW_MOUSE_CAPTURE));
 
         /* old window must lose an existing mouse capture. */
         if (keyboard->focus->flags & SDL_WINDOW_MOUSE_CAPTURE) {
@@ -936,7 +939,7 @@ SDL_SendKeyboardKeyInternal(Uint8 source, Uint8 state, SDL_Scancode scancode, SD
         SDL_MinimizeWindow(keyboard->focus);
     }
 
-    return posted;
+    return (posted);
 }
 
 int
@@ -1042,7 +1045,7 @@ SDL_SendKeyboardText(const char *text)
             posted |= (SDL_PushEvent(&event) > 0);
         }
     }
-    return posted;
+    return (posted);
 }
 
 int
@@ -1073,7 +1076,7 @@ SDL_SendEditingText(const char *text, int start, int length)
 
         posted = (SDL_PushEvent(&event) > 0);
     }
-    return posted;
+    return (posted);
 }
 
 void
@@ -1097,7 +1100,7 @@ SDL_GetModState(void)
 {
     SDL_Keyboard *keyboard = &SDL_keyboard;
 
-    return (SDL_Keymod)keyboard->modstate;
+    return (SDL_Keymod) keyboard->modstate;
 }
 
 void
@@ -1180,7 +1183,7 @@ SDL_Scancode SDL_GetScancodeFromName(const char *name)
 {
     int i;
 
-    if (name == NULL || !*name) {
+    if (!name || !*name) {
             SDL_InvalidParamError("name");
         return SDL_SCANCODE_UNKNOWN;
     }
@@ -1205,7 +1208,8 @@ SDL_GetKeyName(SDL_Keycode key)
     char *end;
 
     if (key & SDLK_SCANCODE_MASK) {
-        return SDL_GetScancodeName((SDL_Scancode)(key & ~SDLK_SCANCODE_MASK));
+        return
+            SDL_GetScancodeName((SDL_Scancode) (key & ~SDLK_SCANCODE_MASK));
     }
 
     switch (key) {

@@ -9,10 +9,9 @@
   including commercial applications, and to alter it and redistribute it
   freely.
 */
+#include "SDL.h"
 
 #include <stdlib.h>
-
-#include <SDL3/SDL.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
@@ -102,7 +101,7 @@ main(int argc, char **argv)
     /* Load the SDL library */
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s\n", SDL_GetError());
-        return 1;
+        return (1);
     }
 
     window = SDL_CreateWindow("testaudiocapture", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 240, 0);
@@ -164,4 +163,3 @@ main(int argc, char **argv)
     return 0;
 }
 
-/* vi: set ts=4 sw=4 expandtab: */

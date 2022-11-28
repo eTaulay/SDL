@@ -3,13 +3,17 @@
 
     The WinMain function -- calls your program's main() function
 */
-#include <SDL3/SDL.h>
+#include "SDL_config.h"
 
 #ifdef __WIN32__
 
 /* Include this so we define UNICODE properly */
 #include "../../core/windows/SDL_windows.h"
 #include <shellapi.h> /* CommandLineToArgvW() */
+
+/* Include the SDL main definition header */
+#include "SDL.h"
+#include "SDL_main.h"
 
 #ifdef main
 #  undef main
@@ -52,13 +56,13 @@ main_getcmdline(void)
 
     /* Parse it into argv and argc */
     argv = (char **)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (argc + 1) * sizeof(*argv));
-    if (argv == NULL) {
+    if (!argv) {
         return OutOfMemory();
     }
     for (i = 0; i < argc; ++i) {
         DWORD len;
         char *arg = WIN_StringToUTF8W(argvw[i]);
-        if (arg == NULL) {
+        if (!arg) {
             return OutOfMemory();
         }
         len = (DWORD)SDL_strlen(arg);

@@ -24,6 +24,9 @@
 
 /* Android SDL video driver implementation */
 
+#include "SDL_video.h"
+#include "SDL_mouse.h"
+#include "SDL_hints.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -47,7 +50,7 @@ static void Android_VideoQuit(_THIS);
 int Android_GetDisplayDPI(_THIS, SDL_VideoDisplay *display, float *ddpi, float *hdpi, float *vdpi);
 
 #include "../SDL_egl_c.h"
-#define Android_GLES_GetProcAddress SDL_EGL_GetProcAddressInternal
+#define Android_GLES_GetProcAddress SDL_EGL_GetProcAddress
 #define Android_GLES_UnloadLibrary SDL_EGL_UnloadLibrary
 #define Android_GLES_SetSwapInterval SDL_EGL_SetSwapInterval
 #define Android_GLES_GetSwapInterval SDL_EGL_GetSwapInterval
@@ -89,13 +92,13 @@ Android_CreateDevice(void)
 
     /* Initialize all variables that we clean on shutdown */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
-    if (device == NULL) {
+    if (!device) {
         SDL_OutOfMemory();
         return NULL;
     }
 
     data = (SDL_VideoData *) SDL_calloc(1, sizeof(SDL_VideoData));
-    if (data == NULL) {
+    if (!data) {
         SDL_OutOfMemory();
         SDL_free(device);
         return NULL;
@@ -280,7 +283,8 @@ void Android_SendResize(SDL_Window *window)
       which can happen after VideoInit().
     */
     SDL_VideoDevice *device = SDL_GetVideoDevice();
-    if (device && device->num_displays > 0) {
+    if (device && device->num_displays > 0)
+    {
         SDL_VideoDisplay *display          = &device->displays[0];
         display->desktop_mode.format       = Android_ScreenFormat;
         display->desktop_mode.w            = Android_DeviceWidth;

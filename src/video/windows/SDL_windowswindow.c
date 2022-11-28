@@ -24,6 +24,7 @@
 
 #include "../../core/windows/SDL_windows.h"
 
+#include "SDL_log.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_keyboard_c.h"
@@ -34,12 +35,14 @@
 #include "SDL_windowsvideo.h"
 #include "SDL_windowswindow.h"
 #include "SDL_windowsshape.h"
+#include "SDL_hints.h"
+#include "SDL_timer.h"
 
 /* Dropfile support */
 #include <shellapi.h>
 
-#define SDL_ENABLE_SYSWM_WINDOWS
-#include <SDL3/SDL_syswm.h>
+/* This is included after SDL_windowsvideo.h, which includes windows.h */
+#include "SDL_syswm.h"
 
 /* Windows CE compatibility */
 #ifndef SWP_NOCOPYBITS
@@ -302,7 +305,7 @@ SetupWindowData(_THIS, SDL_Window * window, HWND hwnd, HWND parent, SDL_bool cre
 
     /* Allocate the window data */
     data = (SDL_WindowData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         return SDL_OutOfMemory();
     }
     data->window = window;
@@ -539,10 +542,9 @@ WIN_CreateWindow(_THIS, SDL_Window * window)
 
     /* The rest of this macro mess is for OpenGL or OpenGL ES windows */
 #if SDL_VIDEO_OPENGL_ES2
-    if ((_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES ||
-         SDL_GetHintBoolean(SDL_HINT_VIDEO_FORCE_EGL, SDL_FALSE)) &&
+    if (_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES
 #if SDL_VIDEO_OPENGL_WGL
-        (!_this->gl_data || WIN_GL_UseEGL(_this))
+        && (!_this->gl_data || WIN_GL_UseEGL(_this))
 #endif /* SDL_VIDEO_OPENGL_WGL */
     ) {
 #if SDL_VIDEO_OPENGL_EGL
@@ -771,7 +773,7 @@ WIN_GetWindowBordersSize(_THIS, SDL_Window * window, int *top, int *left, int *b
 
     /* Now that both the inner and outer rects use the same coordinate system we can substract them to get the border size.
      * Keep in mind that the top/left coordinates of rcWindow are negative because the border lies slightly before {0,0},
-     * so switch them around because SDL3 wants them in positive. */
+     * so switch them around because SDL2 wants them in positive. */
     *top    = rcClient.top    - rcWindow.top;
     *left   = rcClient.left   - rcWindow.left;
     *bottom = rcWindow.bottom - rcClient.bottom;
@@ -839,7 +841,8 @@ WIN_RaiseWindow(_THIS, SDL_Window * window)
     DWORD dwCurID = 0u;
 
     HWND hwnd = ((SDL_WindowData *) window->driverdata)->hwnd;
-    if (bForce) {
+    if(bForce)
+    {
         hCurWnd = GetForegroundWindow();
         dwMyID = GetCurrentThreadId();
         dwCurID = GetWindowThreadProcessId(hCurWnd, NULL);
@@ -849,7 +852,8 @@ WIN_RaiseWindow(_THIS, SDL_Window * window)
         SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     }
     SetForegroundWindow(hwnd);
-    if (bForce) {
+    if (bForce)
+    {
         AttachThreadInput(dwCurID, dwMyID, FALSE);
         SetFocus(hwnd);
         SetActiveWindow(hwnd);
@@ -1016,6 +1020,25 @@ WIN_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display, 
 }
 
 #if !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
+int
+WIN_SetWindowGammaRamp(_THIS, SDL_Window * window, const Uint16 * ramp)
+{
+    SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
+    SDL_DisplayData *data = (SDL_DisplayData *) display->driverdata;
+    HDC hdc;
+    BOOL succeeded = FALSE;
+
+    hdc = CreateDCW(data->DeviceName, NULL, NULL, NULL);
+    if (hdc) {
+        succeeded = SetDeviceGammaRamp(hdc, (LPVOID)ramp);
+        if (!succeeded) {
+            WIN_SetError("SetDeviceGammaRamp()");
+        }
+        DeleteDC(hdc);
+    }
+    return succeeded ? 0 : -1;
+}
+
 void
 WIN_UpdateWindowICCProfile(SDL_Window * window, SDL_bool send_event)
 {
@@ -1056,7 +1079,7 @@ WIN_GetWindowICCProfile(_THIS, SDL_Window * window, size_t * size)
     filename_utf8 = WIN_StringToUTF8(data->ICMFileName);
     if (filename_utf8) {
         iccProfileData = SDL_LoadFile(filename_utf8, size);
-        if (iccProfileData == NULL) {
+        if (!iccProfileData) {
             SDL_SetError("Could not open ICC profile");
         }
         SDL_free(filename_utf8);
@@ -1064,6 +1087,25 @@ WIN_GetWindowICCProfile(_THIS, SDL_Window * window, size_t * size)
         SDL_OutOfMemory();
     }
     return iccProfileData;
+}
+
+int
+WIN_GetWindowGammaRamp(_THIS, SDL_Window * window, Uint16 * ramp)
+{
+    SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
+    SDL_DisplayData *data = (SDL_DisplayData *) display->driverdata;
+    HDC hdc;
+    BOOL succeeded = FALSE;
+
+    hdc = CreateDCW(data->DeviceName, NULL, NULL, NULL);
+    if (hdc) {
+        succeeded = GetDeviceGammaRamp(hdc, (LPVOID)ramp);
+        if (!succeeded) {
+            WIN_SetError("GetDeviceGammaRamp()");
+        }
+        DeleteDC(hdc);
+    }
+    return succeeded ? 0 : -1;
 }
 
 static void WIN_GrabKeyboard(SDL_Window *window)
@@ -1151,17 +1193,30 @@ WIN_DestroyWindow(_THIS, SDL_Window * window)
     CleanupWindowData(_this, window);
 }
 
-int
-WIN_GetWindowWMInfo(_THIS, SDL_Window *window, SDL_SysWMinfo *info)
+SDL_bool
+WIN_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
 {
     const SDL_WindowData *data = (const SDL_WindowData *) window->driverdata;
+    if (info->version.major <= SDL_MAJOR_VERSION) {
+        int versionnum = SDL_VERSIONNUM(info->version.major, info->version.minor, info->version.patch);
 
-    info->subsystem = SDL_SYSWM_WINDOWS;
-    info->info.win.window = data->hwnd;
-    info->info.win.hdc = data->hdc;
-    info->info.win.hinstance = data->hinstance;
+        info->subsystem = SDL_SYSWM_WINDOWS;
+        info->info.win.window = data->hwnd;
 
-    return 0;
+        if (versionnum >= SDL_VERSIONNUM(2, 0, 4)) {
+            info->info.win.hdc = data->hdc;
+        }
+
+        if (versionnum >= SDL_VERSIONNUM(2, 0, 5)) {
+            info->info.win.hinstance = data->hinstance;
+        }
+
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Application not compiled with SDL %d",
+                     SDL_MAJOR_VERSION);
+        return SDL_FALSE;
+    }
 }
 
 /*
@@ -1238,7 +1293,7 @@ void WIN_OnWindowEnter(_THIS, SDL_Window * window)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
 
-    if (data == NULL || !data->hwnd) {
+    if (!data || !data->hwnd) {
         /* The window wasn't fully initialized */
         return;
     }
@@ -1396,9 +1451,8 @@ WIN_ClientPointToSDL(const SDL_Window *window, int *x, int *y)
     const SDL_WindowData *data = ((SDL_WindowData *)window->driverdata);
     const SDL_VideoData *videodata = data->videodata;
 
-    if (!videodata->dpi_scaling_enabled) {
+    if (!videodata->dpi_scaling_enabled)
         return;
-    }
 
     *x = MulDiv(*x, 96, data->scaling_dpi);
     *y = MulDiv(*y, 96, data->scaling_dpi);
@@ -1415,9 +1469,8 @@ WIN_ClientPointFromSDL(const SDL_Window *window, int *x, int *y)
     const SDL_WindowData *data = ((SDL_WindowData *)window->driverdata);
     const SDL_VideoData *videodata = data->videodata;
 
-    if (!videodata->dpi_scaling_enabled) {
+    if (!videodata->dpi_scaling_enabled)
         return;
-    }
     
     *x = MulDiv(*x, data->scaling_dpi, 96);
     *y = MulDiv(*y, data->scaling_dpi, 96);

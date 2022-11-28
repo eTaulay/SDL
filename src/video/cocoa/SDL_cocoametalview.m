@@ -30,9 +30,8 @@
 
 #if SDL_VIDEO_DRIVER_COCOA && (SDL_VIDEO_VULKAN || SDL_VIDEO_METAL)
 
-
-#define SDL_ENABLE_SYSWM_COCOA
-#include <SDL3/SDL_syswm.h>
+#include "SDL_events.h"
+#include "SDL_syswm.h"
 
 
 static int SDLCALL

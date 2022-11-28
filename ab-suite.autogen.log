@@ -1,0 +1,6 @@
+CPPFLAGS: -D_FORTIFY_SOURCE=0 -D__USE_MINGW_ANSI_STDIO=1
+CFLAGS: -mthreads -mtune=generic -O2 -pipe
+CXXFLAGS: -mthreads -mtune=generic -O2 -pipe
+LDFLAGS: -pipe -static-libgcc -static-libstdc++
+./autogen.sh 
+/build/media-suite_helper.sh: line 1437: ./autogen.sh: No such file or directory

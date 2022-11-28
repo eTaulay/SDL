@@ -24,6 +24,7 @@
 
 #include <kernel/OS.h>
 
+#include "SDL_timer.h"
 
 static bigtime_t start;
 static SDL_bool ticks_started = SDL_FALSE;

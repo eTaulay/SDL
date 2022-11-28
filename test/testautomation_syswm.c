@@ -1,9 +1,12 @@
 /**
  * SysWM test suite
  */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_syswm.h>
-#include <SDL3/SDL_test.h>
+
+#include <stdio.h>
+
+#include "SDL.h"
+#include "SDL_syswm.h"
+#include "SDL_test.h"
 
 /* Test case functions */
 
@@ -13,7 +16,7 @@
 int
 syswm_getWindowWMInfo(void *arg)
 {
-  int result;
+  SDL_bool result;
   SDL_Window *window;
   SDL_SysWMinfo info;
 
@@ -24,10 +27,13 @@ syswm_getWindowWMInfo(void *arg)
      return TEST_ABORTED;
   }
 
+  /* Initialize info structure with SDL version info */
+  SDL_VERSION(&info.version);
+
   /* Make call */
-  result = SDL_GetWindowWMInfo(window, &info, SDL_SYSWM_CURRENT_VERSION);
+  result = SDL_GetWindowWMInfo(window, &info);
   SDLTest_AssertPass("Call to SDL_GetWindowWMInfo()");
-  SDLTest_Log((result == 0) ? "Got window information" : "Couldn't get window information");
+  SDLTest_Log((result == SDL_TRUE) ? "Got window information" : "Couldn't get window information");
 
   SDL_DestroyWindow(window);
   SDLTest_AssertPass("Call to SDL_DestroyWindow()");
@@ -53,5 +59,3 @@ SDLTest_TestSuiteReference syswmTestSuite = {
     syswmTests,
     NULL
 };
-
-/* vi: set ts=4 sw=4 expandtab: */

@@ -27,6 +27,7 @@
 
 #include "../../core/windows/SDL_windows.h"
 
+#include "SDL_loadso.h"
 
 void *
 SDL_LoadObject(const char *sofile)
@@ -34,7 +35,7 @@ SDL_LoadObject(const char *sofile)
     void *handle;
     LPTSTR tstr;
 
-    if (sofile == NULL) {
+    if (!sofile) {
         SDL_InvalidParamError("sofile");
         return NULL;
     }

@@ -11,7 +11,8 @@
 */
 /* Simple test of filesystem functions. */
 
-#include <SDL3/SDL.h>
+#include <stdio.h>
+#include "SDL.h"
 
 int
 main(int argc, char *argv[])
@@ -28,7 +29,7 @@ main(int argc, char *argv[])
     }
 
     base_path = SDL_GetBasePath();
-    if (base_path == NULL) {
+    if(base_path == NULL){
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't find base path: %s\n",
                    SDL_GetError());
     } else {
@@ -37,7 +38,7 @@ main(int argc, char *argv[])
     }
 
     pref_path = SDL_GetPrefPath("libsdl", "test_filesystem");
-    if (pref_path == NULL) {
+    if(pref_path == NULL){
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't find pref path: %s\n",
                    SDL_GetError());
     } else {
@@ -46,7 +47,7 @@ main(int argc, char *argv[])
     }
 
     pref_path = SDL_GetPrefPath(NULL, "test_filesystem");
-    if (pref_path == NULL) {
+    if(pref_path == NULL){
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't find pref path without organization: %s\n",
                    SDL_GetError());
     } else {
@@ -57,5 +58,3 @@ main(int argc, char *argv[])
     SDL_Quit();
     return 0;
 }
-
-/* vi: set ts=4 sw=4 expandtab: */

@@ -23,6 +23,7 @@
 #ifndef SDL_POWER_DISABLED
 #if SDL_POWER_WINRT
 
+#include "SDL_power.h"
 
 extern "C"
 SDL_bool

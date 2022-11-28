@@ -345,7 +345,7 @@ static SDL_bool ExpandDialogSpace(WIN_DialogData *dialog, size_t space)
 
     if (size > dialog->size) {
         void *data = SDL_realloc(dialog->data, size);
-        if (data == NULL) {
+        if (!data) {
             SDL_OutOfMemory();
             return SDL_FALSE;
         }
@@ -388,12 +388,12 @@ static SDL_bool AddDialogString(WIN_DialogData *dialog, const char *string)
     size_t count;
     SDL_bool status;
 
-    if (string == NULL) {
+    if (!string) {
         string = "";
     }
 
     wstring = WIN_UTF8ToStringW(string);
-    if (wstring == NULL) {
+    if (!wstring) {
         return SDL_FALSE;
     }
 
@@ -523,7 +523,7 @@ static WIN_DialogData *CreateDialogData(int w, int h, const char *caption)
     Vec2ToDLU(&dialogTemplate.cx, &dialogTemplate.cy);
 
     dialog = (WIN_DialogData *)SDL_calloc(1, sizeof(*dialog));
-    if (dialog == NULL) {
+    if (!dialog) {
         return NULL;
     }
 
@@ -566,10 +566,8 @@ static WIN_DialogData *CreateDialogData(int w, int h, const char *caption)
         {
             HDC ScreenDC = GetDC(NULL);
             int LogicalPixelsY = GetDeviceCaps(ScreenDC, LOGPIXELSY);
-            if (!LogicalPixelsY) {
-                LogicalPixelsY = 72; /* This can happen if the application runs out of GDI handles */
-            }
-
+            if (!LogicalPixelsY) /* This can happen if the application runs out of GDI handles */
+                LogicalPixelsY = 72;
             WordToPass = (WORD)(-72 * NCM.lfMessageFont.lfHeight / LogicalPixelsY);
             ReleaseDC(NULL, ScreenDC);
         }
@@ -807,9 +805,8 @@ WIN_ShowOldMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
     }
 
     /* Ensure the size is wide enough for all of the buttons. */
-    if (Size.cx < messageboxdata->numbuttons * (ButtonWidth + ButtonMargin) + ButtonMargin) {
+    if (Size.cx < messageboxdata->numbuttons * (ButtonWidth + ButtonMargin) + ButtonMargin)
         Size.cx = messageboxdata->numbuttons * (ButtonWidth + ButtonMargin) + ButtonMargin;
-    }
 
     /* Reset the height to the icon size if it is actually bigger than the text. */
     if (icon && Size.cy < IconMargin * 2 + IconHeight) {
@@ -820,7 +817,7 @@ WIN_ShowOldMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
     Size.cy += ButtonHeight + TextMargin;
 
     dialog = CreateDialogData(Size.cx, Size.cy, messageboxdata->title);
-    if (dialog == NULL) {
+    if (!dialog) {
         return -1;
     }
 
@@ -980,7 +977,8 @@ WIN_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
     pButtons = SDL_malloc(sizeof (TASKDIALOG_BUTTON) * messageboxdata->numbuttons);
     TaskConfig.nDefaultButton = 0;
     nCancelButton = 0;
-    for (i = 0; i < messageboxdata->numbuttons; i++) {
+    for (i = 0; i < messageboxdata->numbuttons; i++)
+    {
         const char *buttontext;
         if (messageboxdata->flags & SDL_MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT) {
             pButton = &pButtons[i];

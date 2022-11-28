@@ -22,26 +22,23 @@
 
 #if SDL_VIDEO_RENDER_METAL && !SDL_RENDER_DISABLED
 
+#include "SDL_hints.h"
+#include "SDL_syswm.h"
+#include "SDL_metal.h"
 #include "../SDL_sysrender.h"
 
 #include <Availability.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 
-#ifdef SDL_VIDEO_DRIVER_COCOA
+#ifdef __MACOSX__
 #import <AppKit/NSWindow.h>
 #import <AppKit/NSView.h>
-#define SDL_ENABLE_SYSWM_COCOA
 #endif
-#ifdef SDL_VIDEO_DRIVER_UIKIT
-#import <UIKit/UIKit.h>
-#define SDL_ENABLE_SYSWM_UIKIT
-#endif
-#include <SDL3/SDL_syswm.h>
 
 /* Regenerate these with build-metal-shaders.sh */
-#ifdef __MACOS__
-#include "SDL_shaders_metal_macos.h"
+#ifdef __MACOSX__
+#include "SDL_shaders_metal_osx.h"
 #elif defined(__TVOS__)
 #if TARGET_OS_SIMULATOR
 #include "SDL_shaders_metal_tvsimulator.h"
@@ -60,7 +57,7 @@
 
 /* macOS requires constants in a buffer to have a 256 byte alignment. */
 /* Use native type alignments from https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf */
-#if defined(__MACOS__) || TARGET_OS_SIMULATOR || TARGET_OS_MACCATALYST
+#if defined(__MACOSX__) || TARGET_OS_SIMULATOR || TARGET_OS_MACCATALYST
 #define CONSTANT_ALIGN(x) (256)
 #else
 #define CONSTANT_ALIGN(x) (x < 4 ? 4 : x)
@@ -170,7 +167,7 @@ IsMetalAvailable(const SDL_SysWMinfo *syswm)
     }
 
     // this checks a weak symbol.
-#if (defined(__MACOS__) && (MAC_OS_X_VERSION_MIN_REQUIRED < 101100))
+#if (defined(__MACOSX__) && (MAC_OS_X_VERSION_MIN_REQUIRED < 101100))
     if (MTLCreateSystemDefaultDevice == NULL) {  // probably on 10.10 or lower.
         return SDL_SetError("Metal framework not available on this system");
     }
@@ -1457,7 +1454,7 @@ METAL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
     [data.mtlcmdencoder endEncoding];
     mtltexture = data.mtlpassdesc.colorAttachments[0].texture;
 
-#ifdef __MACOS__
+#ifdef __MACOSX__
     /* on macOS with managed-storage textures, we need to tell the driver to
      * update the CPU-side copy of the texture data.
      * NOTE: Currently all of our textures are managed on macOS. We'll need some
@@ -1582,7 +1579,7 @@ METAL_GetMetalCommandEncoder(SDL_Renderer * renderer)
 static int
 METAL_SetVSync(SDL_Renderer * renderer, const int vsync)
 {
-#if (defined(__MACOS__) && defined(MAC_OS_X_VERSION_10_13)) || TARGET_OS_MACCATALYST
+#if (defined(__MACOSX__) && defined(MAC_OS_X_VERSION_10_13)) || TARGET_OS_MACCATALYST
     if (@available(macOS 10.13, *)) {
         METAL_RenderData *data = (__bridge METAL_RenderData *) renderer->driverdata;
         if (vsync) {
@@ -1602,8 +1599,9 @@ static SDL_MetalView GetWindowView(SDL_Window *window)
 {
     SDL_SysWMinfo info;
 
-    if (SDL_GetWindowWMInfo(window, &info, SDL_SYSWM_CURRENT_VERSION) == 0) {
-#ifdef SDL_ENABLE_SYSWM_COCOA
+    SDL_VERSION(&info.version);
+    if (SDL_GetWindowWMInfo(window, &info)) {
+#ifdef __MACOSX__
         if (info.subsystem == SDL_SYSWM_COCOA) {
             NSView *view = info.info.cocoa.window.contentView;
             if (view.subviews.count > 0) {
@@ -1613,8 +1611,7 @@ static SDL_MetalView GetWindowView(SDL_Window *window)
                 }
             }
         }
-#endif
-#ifdef SDL_ENABLE_SYSWM_UIKIT
+#else
         if (info.subsystem == SDL_SYSWM_UIKIT) {
             UIView *view = info.info.uikit.window.rootViewController.view;
             if (view.tag == SDL_METALVIEW_TAG) {
@@ -1686,7 +1683,8 @@ METAL_CreateRenderer(SDL_Window * window, Uint32 flags)
         1.0000,  1.7720,  0.0000, 0.0,        /* Bcoeff */
     };
 
-    if (SDL_GetWindowWMInfo(window, &syswm, SDL_SYSWM_CURRENT_VERSION) < 0) {
+    SDL_VERSION(&syswm.version);
+    if (!SDL_GetWindowWMInfo(window, &syswm)) {
         return NULL;
     }
 
@@ -1737,7 +1735,7 @@ METAL_CreateRenderer(SDL_Window * window, Uint32 flags)
 
     data.mtlview = view;
 
-#ifdef __MACOS__
+#ifdef __MACOSX__
     layer = (CAMetalLayer *)[(__bridge NSView *)view layer];
 #else
     layer = (CAMetalLayer *)[(__bridge UIView *)view layer];
@@ -1858,7 +1856,7 @@ METAL_CreateRenderer(SDL_Window * window, Uint32 flags)
 
     renderer->always_batch = SDL_TRUE;
 
-#if (defined(__MACOS__) && defined(MAC_OS_X_VERSION_10_13)) || TARGET_OS_MACCATALYST
+#if (defined(__MACOSX__) && defined(MAC_OS_X_VERSION_10_13)) || TARGET_OS_MACCATALYST
     if (@available(macOS 10.13, *)) {
         data.mtllayer.displaySyncEnabled = (flags & SDL_RENDERER_PRESENTVSYNC) != 0;
         if (data.mtllayer.displaySyncEnabled) {
@@ -1872,7 +1870,7 @@ METAL_CreateRenderer(SDL_Window * window, Uint32 flags)
 
     /* https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf */
     maxtexsize = 4096;
-#if defined(__MACOS__) || TARGET_OS_MACCATALYST
+#if defined(__MACOSX__) || TARGET_OS_MACCATALYST
     maxtexsize = 16384;
 #elif defined(__TVOS__)
     maxtexsize = 8192;

@@ -22,6 +22,11 @@
 
 #ifdef SDL_JOYSTICK_HIDAPI
 
+#include "SDL_atomic.h"
+#include "SDL_endian.h"
+#include "SDL_hints.h"
+#include "SDL_timer.h"
+#include "SDL_joystick.h"
 #include "../SDL_sysjoystick.h"
 #include "SDL_hidapijoystick_c.h"
 #include "SDL_hidapi_rumble.h"
@@ -389,7 +394,7 @@ HIDAPI_SetupDeviceDriver(SDL_HIDAPI_Device *device, SDL_bool *removed)
             for (curr = SDL_HIDAPI_devices; curr && curr != device; curr = curr->next) {
                 continue;
             }
-            if (curr == NULL) {
+            if (!curr) {
                 *removed = SDL_TRUE;
                 if (dev) {
                     SDL_hid_close(dev);
@@ -397,7 +402,7 @@ HIDAPI_SetupDeviceDriver(SDL_HIDAPI_Device *device, SDL_bool *removed)
                 return;
             }
 
-            if (dev == NULL) {
+            if (!dev) {
                 SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
                              "HIDAPI_SetupDeviceDriver() couldn't open %s: %s\n",
                              device->path, SDL_GetError());
@@ -513,7 +518,7 @@ static SDL_bool
 HIDAPI_AddJoystickInstanceToDevice(SDL_HIDAPI_Device *device, SDL_JoystickID joystickID)
 {
     SDL_JoystickID *joysticks = (SDL_JoystickID *)SDL_realloc(device->joysticks, (device->num_joysticks + 1)*sizeof(*device->joysticks));
-    if (joysticks == NULL) {
+    if (!joysticks) {
         return SDL_FALSE;
     }
 
@@ -583,7 +588,7 @@ HIDAPI_HasConnectedUSBDevice(const char *serial)
 {
     SDL_HIDAPI_Device *device;
 
-    if (serial == NULL) {
+    if (!serial) {
         return SDL_FALSE;
     }
 
@@ -608,7 +613,7 @@ HIDAPI_DisconnectBluetoothDevice(const char *serial)
 {
     SDL_HIDAPI_Device *device;
 
-    if (serial == NULL) {
+    if (!serial) {
         return;
     }
 
@@ -713,7 +718,7 @@ HIDAPI_ConvertString(const wchar_t *wide_string)
 
     if (wide_string) {
         string = SDL_iconv_string("UTF-8", "WCHAR_T", (char*)wide_string, (SDL_wcslen(wide_string)+1)*sizeof(wchar_t));
-        if (string == NULL) {
+        if (!string) {
             switch (sizeof(wchar_t)) {
             case 2:
                 string = SDL_iconv_string("UTF-8", "UCS-2-INTERNAL", (char*)wide_string, (SDL_wcslen(wide_string)+1)*sizeof(wchar_t));
@@ -739,7 +744,7 @@ HIDAPI_AddDevice(const struct SDL_hid_device_info *info, int num_children, SDL_H
     }
 
     device = (SDL_HIDAPI_Device *)SDL_calloc(1, sizeof(*device));
-    if (device == NULL) {
+    if (!device) {
         return NULL;
     }
     device->path = SDL_strdup(info->path);
@@ -903,7 +908,7 @@ HIDAPI_CreateCombinedJoyCons()
         if (joycons[0] && joycons[1]) {
             SDL_hid_device_info info;
             SDL_HIDAPI_Device **children = (SDL_HIDAPI_Device **)SDL_malloc(2 * sizeof(SDL_HIDAPI_Device *));
-            if (children == NULL) {
+            if (!children) {
                 return SDL_FALSE;
             }
             children[0] = joycons[0];
@@ -1295,13 +1300,13 @@ HIDAPI_JoystickOpen(SDL_Joystick *joystick, int device_index)
     SDL_HIDAPI_Device *device = HIDAPI_GetDeviceByIndex(device_index, &joystickID);
     struct joystick_hwdata *hwdata;
 
-    if (device == NULL || !device->driver) {
+    if (!device || !device->driver) {
         /* This should never happen - validated before being called */
         return SDL_SetError("Couldn't find HIDAPI device at index %d\n", device_index);
     }
 
     hwdata = (struct joystick_hwdata *)SDL_calloc(1, sizeof(*hwdata));
-    if (hwdata == NULL) {
+    if (!hwdata) {
         return SDL_OutOfMemory();
     }
     hwdata->device = device;

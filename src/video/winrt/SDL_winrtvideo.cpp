@@ -54,10 +54,13 @@ static const GUID SDL_IID_IDXGIFactory2     = { 0x50c83a1c, 0xe072, 0x4c48, { 0x
 
 /* SDL includes */
 extern "C" {
+#include "SDL_video.h"
+#include "SDL_mouse.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
 #include "../../render/SDL_sysrender.h"
+#include "SDL_syswm.h"
 #include "SDL_winrtopengles.h"
 #include "../../core/windows/SDL_windows.h"
 }
@@ -68,9 +71,9 @@ extern "C" {
 #include "SDL_winrtevents_c.h"
 #include "SDL_winrtgamebar_cpp.h"
 #include "SDL_winrtmouse_c.h"
-
-#define SDL_ENABLE_SYSWM_WINRT
-#include <SDL3/SDL_syswm.h>
+#include "SDL_main.h"
+#include "SDL_system.h"
+#include "SDL_hints.h"
 
 
 /* Initialization/Query functions */
@@ -85,7 +88,7 @@ static int WINRT_CreateWindow(_THIS, SDL_Window * window);
 static void WINRT_SetWindowSize(_THIS, SDL_Window * window);
 static void WINRT_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display, SDL_bool fullscreen);
 static void WINRT_DestroyWindow(_THIS, SDL_Window * window);
-static int WINRT_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info);
+static SDL_bool WINRT_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info);
 
 
 /* Misc functions */
@@ -121,16 +124,16 @@ WINRT_CreateDevice(void)
 
     /* Initialize all variables that we clean on shutdown */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
-    if (device == NULL) {
+    if (!device) {
         SDL_OutOfMemory();
-        return 0;
+        return (0);
     }
 
     data = (SDL_VideoData *) SDL_calloc(1, sizeof(SDL_VideoData));
-    if (data == NULL) {
+    if (!data) {
         SDL_OutOfMemory();
         SDL_free(device);
-        return 0;
+        return (0);
     }
     device->driverdata = data;
 
@@ -348,7 +351,7 @@ WINRT_AddDisplaysForOutput (_THIS, IDXGIAdapter1 * dxgiAdapter1, int outputIndex
         }
 
         dxgiModes = (DXGI_MODE_DESC *)SDL_calloc(numModes, sizeof(DXGI_MODE_DESC));
-        if (dxgiModes == NULL) {
+        if ( ! dxgiModes) {
             SDL_OutOfMemory();
             goto done;
         }
@@ -610,7 +613,7 @@ WINRT_IsCoreWindowActive(CoreWindow ^ coreWindow)
     if (coreWindow->CustomProperties->HasKey("SDLHelperWindowActivationState")) {
         CoreWindowActivationState activationState = \
             safe_cast<CoreWindowActivationState>(coreWindow->CustomProperties->Lookup("SDLHelperWindowActivationState"));
-        return activationState != CoreWindowActivationState::Deactivated;
+        return (activationState != CoreWindowActivationState::Deactivated);
     }
 
     /* Assume that non-SDL tracked windows are active, although this should
@@ -823,14 +826,21 @@ WINRT_DestroyWindow(_THIS, SDL_Window * window)
     }
 }
 
-int
-WINRT_GetWindowWMInfo(_THIS, SDL_Window *window, SDL_SysWMinfo *info)
+SDL_bool
+WINRT_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
 {
-    SDL_WindowData *data = (SDL_WindowData *)window->driverdata;
+    SDL_WindowData * data = (SDL_WindowData *) window->driverdata;
 
-    info->subsystem = SDL_SYSWM_WINRT;
-    info->info.winrt.window = reinterpret_cast<IInspectable *>(data->coreWindow.Get());
-    return 0;
+    if (info->version.major <= SDL_MAJOR_VERSION) {
+        info->subsystem = SDL_SYSWM_WINRT;
+        info->info.winrt.window = reinterpret_cast<IInspectable *>(data->coreWindow.Get());
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Application not compiled with SDL %d",
+                     SDL_MAJOR_VERSION);
+        return SDL_FALSE;
+    }
+    return SDL_FALSE;
 }
 
 static ABI::Windows::System::Display::IDisplayRequest *

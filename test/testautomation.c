@@ -11,9 +11,11 @@
 */
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_test.h>
+#include "SDL.h"
+#include "SDL_test.h"
 
 #include "testautomation_suites.h"
 
@@ -40,7 +42,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
 
@@ -54,22 +56,23 @@ main(int argc, char *argv[])
             if (SDL_strcasecmp(argv[i], "--iterations") == 0) {
                 if (argv[i + 1]) {
                     testIterations = SDL_atoi(argv[i + 1]);
-                    if (testIterations < 1) {
-                        testIterations = 1;
-                    }
+                    if (testIterations < 1) testIterations = 1;
                     consumed = 2;
                 }
-            } else if (SDL_strcasecmp(argv[i], "--execKey") == 0) {
+            }
+            else if (SDL_strcasecmp(argv[i], "--execKey") == 0) {
                 if (argv[i + 1]) {
                     SDL_sscanf(argv[i + 1], "%"SDL_PRIu64, &userExecKey);
                     consumed = 2;
                 }
-            } else if (SDL_strcasecmp(argv[i], "--seed") == 0) {
+            }
+            else if (SDL_strcasecmp(argv[i], "--seed") == 0) {
                 if (argv[i + 1]) {
                     userRunSeed = SDL_strdup(argv[i + 1]);
                     consumed = 2;
                 }
-            } else if (SDL_strcasecmp(argv[i], "--filter") == 0) {
+            }
+            else if (SDL_strcasecmp(argv[i], "--filter") == 0) {
                 if (argv[i + 1]) {
                     filter = SDL_strdup(argv[i + 1]);
                     consumed = 2;
@@ -102,7 +105,7 @@ main(int argc, char *argv[])
 
     /* Empty event queue */
     done = 0;
-    for (i=0; i<100; i++) {
+    for (i=0; i<100; i++)  {
       while (SDL_PollEvent(&event)) {
         SDLTest_CommonEvent(state, &event, &done);
       }
@@ -115,7 +118,7 @@ main(int argc, char *argv[])
 
     /* Shutdown everything */
     quit(result);
-    return result;
+    return(result);
 }
 
 /* vi: set ts=4 sw=4 expandtab: */

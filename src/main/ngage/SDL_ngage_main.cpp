@@ -1,7 +1,10 @@
 /*
     SDL_ngage_main.c, originally for SDL 1.2 by Hannu Viitala
 */
-#include <SDL3/SDL.h>
+#include "../../SDL_internal.h"
+
+/* Include the SDL main definition header */
+#include "SDL_main.h"
 
 #include <e32std.h>
 #include <e32def.h>
@@ -13,10 +16,7 @@
 #include <w32std.h>
 #include <apgtask.h>
 
-
-#ifdef main
-#undef main
-#endif
+#include "SDL_error.h"
 
 extern "C" int main(int argc, char *argv[]);
 
@@ -58,10 +58,13 @@ TInt E32Main()
 
     newHeap = User::ChunkHeap(NULL, heapSize, heapSize, KMinHeapGrowBy);
 
-    if (newHeap == NULL) {
+    if (NULL == newHeap)
+    {
         ret = 3;
         goto cleanup;
-    } else {
+    }
+    else
+    {
         oldHeap = User::SwitchHeap(newHeap);
         /* Call stdlib main */
         SDL_SetMainReady();

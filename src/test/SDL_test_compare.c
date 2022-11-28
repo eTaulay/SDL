@@ -26,7 +26,10 @@
  Rewritten for test lib by Andreas Schiffler.
 
 */
-#include <SDL3/SDL_test.h>
+
+#include "SDL_config.h"
+
+#include "SDL_test.h"
 
 
 /* Counter for _CompareSurface calls; used for filename creation when comparisons fail */

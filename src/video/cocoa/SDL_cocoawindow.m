@@ -23,24 +23,23 @@
 #if SDL_VIDEO_DRIVER_COCOA
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
-# error SDL for macOS must be built with a 10.7 SDK or above.
+# error SDL for Mac OS X must be built with a 10.7 SDK or above.
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED < 1070 */
 
+#include "SDL_syswm.h"
+#include "SDL_timer.h"  /* For SDL_GetTicks() */
+#include "SDL_hints.h"
 #include "../SDL_sysvideo.h"
 #include "../../events/SDL_keyboard_c.h"
 #include "../../events/SDL_mouse_c.h"
 #include "../../events/SDL_touch_c.h"
 #include "../../events/SDL_windowevents_c.h"
 #include "../../events/SDL_dropevents_c.h"
-
 #include "SDL_cocoavideo.h"
 #include "SDL_cocoashape.h"
 #include "SDL_cocoamouse.h"
 #include "SDL_cocoaopengl.h"
 #include "SDL_cocoaopengles.h"
-
-#define SDL_ENABLE_SYSWM_COCOA
-#include <SDL3/SDL_syswm.h>
 
 /* #define DEBUG_COCOAWINDOW */
 
@@ -1800,13 +1799,6 @@ Cocoa_CreateWindow(_THIS, SDL_Window * window)
     if ((window->flags & SDL_WINDOW_OPENGL) &&
         _this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) {
         [contentView setWantsLayer:TRUE];
-        if (!(window->flags & SDL_WINDOW_ALLOW_HIGHDPI)) {
-            contentView.layer.contentsScale = 1;
-        } else {
-            if ([nswindow.screen respondsToSelector:@selector(backingScaleFactor)]) {
-                contentView.layer.contentsScale = nswindow.screen.backingScaleFactor;
-            }
-        }
     }
 #endif /* SDL_VIDEO_OPENGL_EGL */
 #endif /* SDL_VIDEO_OPENGL_ES2 */
@@ -2143,8 +2135,8 @@ Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
         rect.size.height = bounds.h;
         ConvertNSRect([nswindow screen], fullscreen, &rect);
 
-        /* Hack to fix origin on macOS 10.4
-           This is no longer needed as of macOS 10.15, according to bug 4822.
+        /* Hack to fix origin on Mac OS X 10.4
+           This is no longer needed as of Mac OS X 10.15, according to bug 4822.
          */
         if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_14) {
             NSRect screenRect = [[nswindow screen] frame];
@@ -2170,7 +2162,7 @@ Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
          * was created as fullscreen-desktop. */
         [nswindow setStyleMask:GetWindowWindowedStyle(window)];
 
-        /* Hack to restore window decorations on macOS 10.10 */
+        /* Hack to restore window decorations on Mac OS X 10.10 */
         frameRect = [nswindow frame];
         [nswindow setFrame:NSMakeRect(frameRect.origin.x, frameRect.origin.y, frameRect.size.width + 1, frameRect.size.height) display:NO];
         [nswindow setFrame:frameRect display:NO];
@@ -2207,6 +2199,33 @@ Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display
     }
 
     ScheduleContextUpdates(data);
+}}
+
+int
+Cocoa_SetWindowGammaRamp(_THIS, SDL_Window * window, const Uint16 * ramp)
+{ @autoreleasepool
+{
+    SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
+    CGDirectDisplayID display_id = ((SDL_DisplayData *)display->driverdata)->display;
+    const uint32_t tableSize = 256;
+    CGGammaValue redTable[tableSize];
+    CGGammaValue greenTable[tableSize];
+    CGGammaValue blueTable[tableSize];
+    uint32_t i;
+    float inv65535 = 1.0f / 65535.0f;
+
+    /* Extract gamma values into separate tables, convert to floats between 0.0 and 1.0 */
+    for (i = 0; i < 256; i++) {
+        redTable[i] = ramp[0*256+i] * inv65535;
+        greenTable[i] = ramp[1*256+i] * inv65535;
+        blueTable[i] = ramp[2*256+i] * inv65535;
+    }
+
+    if (CGSetDisplayTransferByTable(display_id, tableSize,
+                                    redTable, greenTable, blueTable) != CGDisplayNoErr) {
+        return SDL_SetError("CGSetDisplayTransferByTable()");
+    }
+    return 0;
 }}
 
 void*
@@ -2285,6 +2304,30 @@ Cocoa_GetWindowDisplayIndex(_THIS, SDL_Window * window)
     return SDL_SetError("Couldn't find the display where the window is located.");
 }}
 
+int
+Cocoa_GetWindowGammaRamp(_THIS, SDL_Window * window, Uint16 * ramp)
+{
+    SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
+    CGDirectDisplayID display_id = ((SDL_DisplayData *)display->driverdata)->display;
+    const uint32_t tableSize = 256;
+    CGGammaValue redTable[tableSize];
+    CGGammaValue greenTable[tableSize];
+    CGGammaValue blueTable[tableSize];
+    uint32_t i, tableCopied;
+
+    if (CGGetDisplayTransferByTable(display_id, tableSize,
+                                    redTable, greenTable, blueTable, &tableCopied) != CGDisplayNoErr) {
+        return SDL_SetError("CGGetDisplayTransferByTable()");
+    }
+
+    for (i = 0; i < tableCopied; i++) {
+        ramp[0*256+i] = (Uint16)(redTable[i] * 65535.0f);
+        ramp[1*256+i] = (Uint16)(greenTable[i] * 65535.0f);
+        ramp[2*256+i] = (Uint16)(blueTable[i] * 65535.0f);
+    }
+    return 0;
+}
+
 void
 Cocoa_SetWindowMouseRect(_THIS, SDL_Window * window)
 {
@@ -2351,15 +2394,21 @@ Cocoa_DestroyWindow(_THIS, SDL_Window * window)
     window->driverdata = NULL;
 }}
 
-int
-Cocoa_GetWindowWMInfo(_THIS, SDL_Window *window, SDL_SysWMinfo *info)
+SDL_bool
+Cocoa_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
 { @autoreleasepool
 {
     NSWindow *nswindow = ((__bridge SDL_WindowData *) window->driverdata).nswindow;
 
-    info->subsystem = SDL_SYSWM_COCOA;
-    info->info.cocoa.window = nswindow;
-    return 0;
+    if (info->version.major <= SDL_MAJOR_VERSION) {
+        info->subsystem = SDL_SYSWM_COCOA;
+        info->info.cocoa.window = nswindow;
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Application not compiled with SDL %d",
+                     SDL_MAJOR_VERSION);
+        return SDL_FALSE;
+    }
 }}
 
 SDL_bool

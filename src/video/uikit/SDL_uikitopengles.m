@@ -31,6 +31,7 @@
 #include "../../events/SDL_keyboard_c.h"
 #include "../../events/SDL_mouse_c.h"
 #include "../../power/uikit/SDL_syspower.h"
+#include "SDL_loadso.h"
 #include <dlfcn.h>
 
 @interface SDLEAGLContext : EAGLContext

@@ -29,6 +29,10 @@
  */
 #include "../SDL_internal.h"
 
+#include "SDL_loadso.h"
+#include "SDL_hidapi.h"
+#include "SDL_thread.h"
+#include "SDL_timer.h"
 #include "SDL_hidapi_c.h"
 
 #if !SDL_HIDAPI_DISABLED
@@ -37,7 +41,7 @@
 #include "../core/windows/SDL_windows.h"
 #endif
 
-#if defined(__MACOS__)
+#if defined(__MACOSX__)
 #include <CoreFoundation/CoreFoundation.h>
 #include <mach/mach.h>
 #include <IOKit/IOKitLib.h>
@@ -59,8 +63,7 @@
 
 #ifdef HAVE_INOTIFY
 #include <unistd.h>  /* just in case we didn't use that SDL_USE_LIBUDEV block... */
-#include <string.h>             /* strerror */
-#include <errno.h>              /* errno */
+#include <errno.h>              /* errno, strerror */
 #include <fcntl.h>
 #include <limits.h>             /* For the definition of NAME_MAX */
 #include <sys/inotify.h>
@@ -100,7 +103,7 @@ static struct
     double m_flLastWin32MessageCheck;
 #endif
 
-#if defined(__MACOS__)
+#if defined(__MACOSX__)
     IONotificationPortRef m_notificationPort;
     mach_port_t m_notificationMach;
 #endif
@@ -162,7 +165,7 @@ static LRESULT CALLBACK ControllerWndProc(HWND hwnd, UINT message, WPARAM wParam
 #endif /* defined(__WIN32__) || defined(__WINGDK__) */
 
 
-#if defined(__MACOS__)
+#if defined(__MACOSX__)
 static void CallbackIOServiceFunc(void *context, io_iterator_t portIterator)
 {
     /* Must drain the iterator, or we won't receive new notifications */
@@ -172,7 +175,7 @@ static void CallbackIOServiceFunc(void *context, io_iterator_t portIterator)
         ++SDL_HIDAPI_discovery.m_unDeviceChangeCounter;
     }
 }
-#endif /* __MACOS__ */
+#endif /* __MACOSX__ */
 
 #ifdef HAVE_INOTIFY
 #ifdef HAVE_INOTIFY_INIT1
@@ -182,9 +185,7 @@ static int SDL_inotify_init1(void) {
 #else
 static int SDL_inotify_init1(void) {
     int fd = inotify_init();
-    if (fd < 0) {
-        return -1;
-    }
+    if (fd  < 0) return -1;
     fcntl(fd, F_SETFL, O_NONBLOCK);
     fcntl(fd, F_SETFD, FD_CLOEXEC);
     return fd;
@@ -194,7 +195,7 @@ static int SDL_inotify_init1(void) {
 static int
 StrHasPrefix(const char *string, const char *prefix)
 {
-    return SDL_strncmp(string, prefix, SDL_strlen(prefix)) == 0;
+    return (SDL_strncmp(string, prefix, SDL_strlen(prefix)) == 0);
 }
 
 static int
@@ -253,7 +254,7 @@ HIDAPI_InitializeDiscovery()
     }
 #endif /* defined(__WIN32__) || defined(__WINGDK__) */
 
-#if defined(__MACOS__)
+#if defined(__MACOSX__)
     SDL_HIDAPI_discovery.m_notificationPort = IONotificationPortCreate(kIOMainPortDefault);
     if (SDL_HIDAPI_discovery.m_notificationPort) {
         {
@@ -303,7 +304,7 @@ HIDAPI_InitializeDiscovery()
 
     SDL_HIDAPI_discovery.m_bCanGetNotifications = (SDL_HIDAPI_discovery.m_notificationMach != MACH_PORT_NULL);
 
-#endif /* __MACOS__ */
+#endif /* __MACOSX__ */
 
 #if defined(SDL_USE_LIBUDEV)
     if (linux_enumeration_method == ENUMERATION_LIBUDEV) {
@@ -323,7 +324,8 @@ HIDAPI_InitializeDiscovery()
                 SDL_HIDAPI_discovery.m_bCanGetNotifications = SDL_TRUE;
             }
         }
-    } else
+    }
+    else
 #endif /* SDL_USE_LIBUDEV */
     {
 #if defined(HAVE_INOTIFY)
@@ -388,7 +390,7 @@ HIDAPI_UpdateDiscovery()
 #endif
 #endif /* defined(__WIN32__) || defined(__WINGDK__) */
 
-#if defined(__MACOS__)
+#if defined(__MACOSX__)
     if (SDL_HIDAPI_discovery.m_notificationPort) {
         struct { mach_msg_header_t hdr; char payload[ 4096 ]; } msg;
         while (mach_msg(&msg.hdr, MACH_RCV_MSG | MACH_RCV_TIMEOUT, 0, sizeof(msg), SDL_HIDAPI_discovery.m_notificationMach, 0, MACH_PORT_NULL) == KERN_SUCCESS) {
@@ -419,14 +421,15 @@ HIDAPI_UpdateDiscovery()
                 if (pUdevDevice) {
                     const char *action = NULL;
                     action = usyms->udev_device_get_action(pUdevDevice);
-                    if (action == NULL || SDL_strcmp(action, "add") == 0 || SDL_strcmp(action, "remove") == 0) {
+                    if (!action || SDL_strcmp(action, "add") == 0 || SDL_strcmp(action, "remove") == 0) {
                         ++SDL_HIDAPI_discovery.m_unDeviceChangeCounter;
                     }
                     usyms->udev_device_unref(pUdevDevice);
                 }
             }
         }
-    } else
+    }
+    else
 #endif /* SDL_USE_LIBUDEV */
     {
 #if defined(HAVE_INOTIFY)
@@ -478,9 +481,8 @@ HIDAPI_ShutdownDiscovery()
     }
 
 #if defined(__WIN32__) || defined(__WINGDK__)
-    if (SDL_HIDAPI_discovery.m_hNotify) {
+    if (SDL_HIDAPI_discovery.m_hNotify)
         UnregisterDeviceNotification(SDL_HIDAPI_discovery.m_hNotify);
-    }
 
     if (SDL_HIDAPI_discovery.m_hwndMsg) {
         DestroyWindow(SDL_HIDAPI_discovery.m_hwndMsg);
@@ -489,7 +491,7 @@ HIDAPI_ShutdownDiscovery()
     UnregisterClassA(SDL_HIDAPI_discovery.m_wndClass.lpszClassName, SDL_HIDAPI_discovery.m_wndClass.hInstance);
 #endif
 
-#if defined(__MACOS__)
+#if defined(__MACOSX__)
     if (SDL_HIDAPI_discovery.m_notificationPort) {
         IONotificationPortDestroy(SDL_HIDAPI_discovery.m_notificationPort);
     }
@@ -507,7 +509,8 @@ HIDAPI_ShutdownDiscovery()
             SDL_UDEV_ReleaseUdevSyms();
             usyms = NULL;
         }
-    } else
+    }
+    else
 #endif /* SDL_USE_LIBUDEV */
     {
 #if defined(HAVE_INOTIFY)
@@ -576,7 +579,7 @@ static const SDL_UDEV_Symbols *udev_ctx = NULL;
 #define HAVE_PLATFORM_BACKEND 1
 #endif /* SDL_USE_LIBUDEV */
 
-#elif __MACOS__
+#elif __MACOSX__
 #include "mac/hid.c"
 #define HAVE_PLATFORM_BACKEND 1
 #define udev_ctx 1
@@ -589,7 +592,7 @@ static const SDL_UDEV_Symbols *udev_ctx = NULL;
 #include "hidapi/hidapi.h"
 #define HAVE_PLATFORM_BACKEND 1
 #define udev_ctx 1
-#elif __IOS__ || __TVOS__
+#elif __IPHONEOS__ || __TVOS__
 /* The implementation for iOS and tvOS is in a separate .m file */
 #include "hidapi/hidapi.h"
 #define HAVE_PLATFORM_BACKEND 1
@@ -805,8 +808,14 @@ SDL_libusb_get_string_descriptor(libusb_device_handle *dev,
                                  uint8_t descriptor_index, uint16_t lang_id,
                                  unsigned char *data, int length)
 {
-    return libusb_control_transfer(dev, LIBUSB_ENDPOINT_IN | 0x0, LIBUSB_REQUEST_GET_DESCRIPTOR, (LIBUSB_DT_STRING << 8) | descriptor_index, lang_id,
-                                   data, (uint16_t)length, 1000); /* Endpoint 0 IN */
+    return libusb_control_transfer(dev,
+                                   LIBUSB_ENDPOINT_IN | 0x0, /* Endpoint 0 IN */
+                                   LIBUSB_REQUEST_GET_DESCRIPTOR,
+                                   (LIBUSB_DT_STRING << 8) | descriptor_index,
+                                   lang_id,
+                                   data,
+                                   (uint16_t) length,
+                                   1000);
 }
 #define libusb_get_string_descriptor SDL_libusb_get_string_descriptor
 #endif /* __FreeBSD__ */
@@ -1231,7 +1240,7 @@ struct SDL_hid_device_info *SDL_hid_enumerate(unsigned short vendor_id, unsigned
 #endif
         for (usb_dev = usb_devs; usb_dev; usb_dev = usb_dev->next) {
             new_dev = (struct SDL_hid_device_info*) SDL_malloc(sizeof(struct SDL_hid_device_info));
-            if (new_dev == NULL) {
+            if (!new_dev) {
                 LIBUSB_hid_free_enumeration(usb_devs);
                 SDL_hid_free_enumeration(devs);
                 SDL_OutOfMemory();
@@ -1304,7 +1313,7 @@ struct SDL_hid_device_info *SDL_hid_enumerate(unsigned short vendor_id, unsigned
 #endif
             if (!bFound) {
                 new_dev = (struct SDL_hid_device_info*) SDL_malloc(sizeof(struct SDL_hid_device_info));
-                if (new_dev == NULL) {
+                if (!new_dev) {
 #ifdef HAVE_LIBUSB
                     if (libusb_ctx.libhandle) {
                         LIBUSB_hid_free_enumeration(usb_devs);
@@ -1563,7 +1572,7 @@ int SDL_hid_get_indexed_string(SDL_hid_device *device, int string_index, wchar_t
 
 void SDL_hid_ble_scan(SDL_bool active)
 {
-#if !SDL_HIDAPI_DISABLED && (__IOS__ || __TVOS__)
+#if !SDL_HIDAPI_DISABLED && (__IPHONEOS__ || __TVOS__)
     hid_ble_scan(active);
 #endif
 }

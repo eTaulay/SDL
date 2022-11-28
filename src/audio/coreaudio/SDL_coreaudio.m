@@ -24,6 +24,8 @@
 
 /* !!! FIXME: clean out some of the macro salsa in here. */
 
+#include "SDL_audio.h"
+#include "SDL_hints.h"
 #include "../SDL_audio_c.h"
 #include "../SDL_sysaudio.h"
 #include "SDL_coreaudio.h"
@@ -910,7 +912,7 @@ prepare_audioqueue(_THIS)
 
     /* Make sure we can feed the device a minimum amount of time */
     MINIMUM_AUDIO_BUFFER_TIME_MS = 15.0;
-#if defined(__IOS__)
+#if defined(__IPHONEOS__)
     if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_7_1) {
         /* Older iOS hardware, use 40 ms as a minimum time */
         MINIMUM_AUDIO_BUFFER_TIME_MS = 40.0;

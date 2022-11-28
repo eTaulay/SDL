@@ -22,6 +22,8 @@
 
 /* Allow access to a raw mixing buffer */
 
+#include "SDL.h"
+#include "SDL_audio.h"
 #include "SDL_audio_c.h"
 #include "SDL_sysaudio.h"
 #include "../thread/SDL_systhread.h"
@@ -46,17 +48,44 @@ static const AudioBootStrap *const bootstrap[] = {
 #if SDL_AUDIO_DRIVER_NETBSD
     &NETBSDAUDIO_bootstrap,
 #endif
+#if SDL_AUDIO_DRIVER_QSA
+    &QSAAUDIO_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_SUNAUDIO
+    &SUNAUDIO_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_ARTS
+    &ARTS_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_ESD
+    &ESD_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_NACL
+    &NACLAUDIO_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_NAS
+    &NAS_bootstrap,
+#endif
 #if SDL_AUDIO_DRIVER_WASAPI
     &WASAPI_bootstrap,
 #endif
 #if SDL_AUDIO_DRIVER_DSOUND
     &DSOUND_bootstrap,
 #endif
+#if SDL_AUDIO_DRIVER_WINMM
+    &WINMM_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_PAUDIO
+    &PAUDIO_bootstrap,
+#endif
 #if SDL_AUDIO_DRIVER_HAIKU
     &HAIKUAUDIO_bootstrap,
 #endif
 #if SDL_AUDIO_DRIVER_COREAUDIO
     &COREAUDIO_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_FUSIONSOUND
+    &FUSIONSOUND_bootstrap,
 #endif
 #if SDL_AUDIO_DRIVER_AAUDIO
     &aaudio_bootstrap,
@@ -90,6 +119,9 @@ static const AudioBootStrap *const bootstrap[] = {
 #endif
 #if SDL_AUDIO_DRIVER_OSS
     &DSP_bootstrap,
+#endif
+#if SDL_AUDIO_DRIVER_OS2
+    &OS2AUDIO_bootstrap,
 #endif
 #if SDL_AUDIO_DRIVER_DISK
     &DISKAUDIO_bootstrap,
@@ -509,9 +541,11 @@ SDL_RemoveAudioDevice(const SDL_bool iscapture, void *handle)
     } else {
         mark_device_removed(handle, current_audio.outputDevices, &current_audio.outputDevicesRemoved);
     }
-    for (device_index = 0; device_index < SDL_arraysize(open_devices); device_index++) {
+    for (device_index = 0; device_index < SDL_arraysize(open_devices); device_index++)
+    {
         device = open_devices[device_index];
-        if (device != NULL && device->handle == handle) {
+        if (device != NULL && device->handle == handle)
+        {
             device_was_opened = SDL_TRUE;
             SDL_OpenedAudioDeviceDisconnected(device);
             break;
@@ -975,7 +1009,7 @@ SDL_AudioInit(const char *driver_name)
         }
     } else {
         for (i = 0; (!initialized) && (bootstrap[i]); ++i) {
-            if (bootstrap[i]->demand_only) {
+            if(bootstrap[i]->demand_only) {
                 continue;
             }
 

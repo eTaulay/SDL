@@ -24,7 +24,10 @@
  Used by the test framework and test cases.
 
 */
-#include <SDL3/SDL_test.h>
+
+#include "SDL_config.h"
+
+#include "SDL_test.h"
 
 /* Assert check message format */
 #define SDLTEST_ASSERT_CHECK_FORMAT "Assert '%s': %s"
@@ -71,10 +74,13 @@ int SDLTest_AssertCheck(int assertCondition, SDL_PRINTF_FORMAT_STRING const char
     va_end(list);
 
     /* Log pass or fail message */
-    if (assertCondition == ASSERT_FAIL) {
+    if (assertCondition == ASSERT_FAIL)
+    {
         SDLTest_AssertsFailed++;
         SDLTest_LogError(SDLTEST_ASSERT_CHECK_FORMAT, logMessage, "Failed");
-    } else {
+    }
+    else
+    {
         SDLTest_AssertsPassed++;
         SDLTest_Log(SDLTEST_ASSERT_CHECK_FORMAT, logMessage, "Passed");
     }
@@ -117,9 +123,12 @@ void SDLTest_ResetAssertSummary()
 void SDLTest_LogAssertSummary()
 {
     int totalAsserts = SDLTest_AssertsPassed + SDLTest_AssertsFailed;
-    if (SDLTest_AssertsFailed == 0) {
+    if (SDLTest_AssertsFailed == 0)
+    {
         SDLTest_Log(SDLTEST_ASSERT_SUMMARY_FORMAT, totalAsserts, SDLTest_AssertsPassed, SDLTest_AssertsFailed);
-    } else {
+    }
+    else
+    {
         SDLTest_LogError(SDLTEST_ASSERT_SUMMARY_FORMAT, totalAsserts, SDLTest_AssertsPassed, SDLTest_AssertsFailed);
     }
 }

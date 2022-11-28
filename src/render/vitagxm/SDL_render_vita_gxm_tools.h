@@ -24,6 +24,7 @@
 
 #include "../../SDL_internal.h"
 
+#include "SDL_hints.h"
 #include "../SDL_sysrender.h"
 
 #include <psp2/kernel/processmgr.h>

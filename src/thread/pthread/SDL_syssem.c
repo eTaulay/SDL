@@ -26,11 +26,13 @@
 #include <sys/time.h>
 #include <time.h>
 
+#include "SDL_thread.h"
+#include "SDL_timer.h"
 
 /* Wrapper around POSIX 1003.1b semaphores */
 
-#if defined(__MACOS__) || defined(__IOS__)
-/* macOS doesn't support sem_getvalue() as of version 10.4 */
+#if defined(__MACOSX__) || defined(__IPHONEOS__)
+/* Mac OS X doesn't support sem_getvalue() as of version 10.4 */
 #include "../generic/SDL_syssem.c"
 #else
 
@@ -70,7 +72,7 @@ SDL_SemTryWait(SDL_sem * sem)
 {
     int retval;
 
-    if (sem == NULL) {
+    if (!sem) {
         return SDL_InvalidParamError("sem");
     }
     retval = SDL_MUTEX_TIMEDOUT;
@@ -85,7 +87,7 @@ SDL_SemWait(SDL_sem * sem)
 {
     int retval;
 
-    if (sem == NULL) {
+    if (!sem) {
         return SDL_InvalidParamError("sem");
     }
 
@@ -112,7 +114,7 @@ SDL_SemWaitTimeout(SDL_sem * sem, Uint32 timeout)
     Uint32 end;
 #endif
 
-    if (sem == NULL) {
+    if (!sem) {
         return SDL_InvalidParamError("sem");
     }
 
@@ -178,15 +180,11 @@ Uint32
 SDL_SemValue(SDL_sem * sem)
 {
     int ret = 0;
-
-    if (!sem) {
-        SDL_InvalidParamError("sem");
-        return 0;
-    }
-
-    sem_getvalue(&sem->sem, &ret);
-    if (ret < 0) {
-        ret = 0;
+    if (sem) {
+        sem_getvalue(&sem->sem, &ret);
+        if (ret < 0) {
+            ret = 0;
+        }
     }
     return (Uint32) ret;
 }
@@ -196,7 +194,7 @@ SDL_SemPost(SDL_sem * sem)
 {
     int retval;
 
-    if (sem == NULL) {
+    if (!sem) {
         return SDL_InvalidParamError("sem");
     }
 
@@ -207,5 +205,5 @@ SDL_SemPost(SDL_sem * sem)
     return retval;
 }
 
-#endif /* __MACOS__ */
+#endif /* __MACOSX__ */
 /* vi: set ts=4 sw=4 expandtab: */

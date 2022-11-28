@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <dlfcn.h>
 
+#include "SDL_loadso.h"
 
 #if SDL_VIDEO_DRIVER_UIKIT
 #include "../../video/uikit/SDL_uikitvideo.h"
@@ -51,7 +52,7 @@ SDL_LoadObject(const char *sofile)
     if (handle == NULL) {
         SDL_SetError("Failed loading %s: %s", sofile, loaderror);
     }
-    return handle;
+    return (handle);
 }
 
 void *
@@ -72,7 +73,7 @@ SDL_LoadFunction(void *handle, const char *name)
                          (const char *) dlerror());
         }
     }
-    return symbol;
+    return (symbol);
 }
 
 void

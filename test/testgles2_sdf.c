@@ -10,20 +10,24 @@
   freely.
 */
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL_test_common.h>
+#include "SDL_test_common.h"
 
-#if defined(__IOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__) || defined(__WINDOWS__) || defined(__LINUX__)
+#if defined(__IPHONEOS__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__) || defined(__NACL__) \
+    || defined(__WINDOWS__) || defined(__LINUX__)
 #define HAVE_OPENGLES2
 #endif
 
 #ifdef HAVE_OPENGLES2
 
-#include <SDL3/SDL_opengles2.h>
+#include "SDL_opengles2.h"
 
 typedef struct GLES2_Context
 {
@@ -68,6 +72,8 @@ static int LoadContext(GLES2_Context * data)
 #define __SDL_NOGETPROCADDR__
 #elif SDL_VIDEO_DRIVER_ANDROID
 #define __SDL_NOGETPROCADDR__
+#elif SDL_VIDEO_DRIVER_PANDORA
+#define __SDL_NOGETPROCADDR__
 #endif
 
 #if defined __SDL_NOGETPROCADDR__
@@ -111,7 +117,7 @@ quit(int rc)
         x; \
         { \
           GLenum glError = ctx.glGetError(); \
-          if (glError != GL_NO_ERROR) { \
+          if(glError != GL_NO_ERROR) { \
             SDL_Log("glGetError() = %i (0x%.8x) at line %i\n", glError, glError, __LINE__); \
             quit(1); \
           } \
@@ -148,7 +154,7 @@ process_shader(GLuint *shader, const char * source, GLint shader_type)
     GL_CHECK(ctx.glGetShaderiv(*shader, GL_COMPILE_STATUS, &status));
 
     /* Dump debug info (source and log) if compilation failed. */
-    if (status != GL_TRUE) {
+    if(status != GL_TRUE) {
         ctx.glGetProgramInfoLog(*shader, sizeof(buffer), &length, &buffer[0]);
         buffer[length] = '\0';
         SDL_Log("Shader compilation failed: %s", buffer);fflush(stderr);
@@ -351,18 +357,10 @@ void loop()
                 }
 
 
-                if (sym == SDLK_LEFT) {
-                    g_val -= 0.05;
-                }
-                if (sym == SDLK_RIGHT) {
-                    g_val += 0.05;
-                }
-                if (sym == SDLK_UP) {
-                    g_angle -= 1;
-                }
-                if (sym == SDLK_DOWN) {
-                        g_angle += 1;
-                }
+                if (sym == SDLK_LEFT)  g_val -= 0.05;
+                if (sym == SDLK_RIGHT) g_val += 0.05;
+                if (sym == SDLK_UP)    g_angle -= 1;
+                if (sym == SDLK_DOWN)  g_angle += 1;
  
 
                 break;
@@ -404,7 +402,8 @@ void loop()
     matrix_mvp[1][1] = -2.0f / 480.0;
     matrix_mvp[3][1] = 1.0f;
     
-    if (0) {
+    if (0)
+    {
         float *f = (float *) matrix_mvp;
         SDL_Log("-----------------------------------");
         SDL_Log("[ %f, %f, %f, %f ]", *f++, *f++, *f++, *f++);
@@ -467,7 +466,7 @@ main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
     for (i = 1; i < argc;) {
@@ -565,9 +564,8 @@ main(int argc, char *argv[])
 #if 1
         path = GetNearbyFilename(f);
 
-        if (path == NULL) {
+        if (path == NULL)
             path = SDL_strdup(f);
-        }
 
         if (path == NULL) {
             SDL_Log("out of memory\n");
@@ -575,7 +573,7 @@ main(int argc, char *argv[])
         }
 
         tmp = SDL_LoadBMP(path);
-        if (tmp == NULL) {
+        if  (tmp == NULL) {
             SDL_Log("missing image file: %s", path);
             exit(-1);
         } else {
@@ -799,9 +797,9 @@ main(int argc, char *argv[])
         SDL_Log("%2.2f frames per second\n",
                ((double) frames * 1000) / (now - then));
     }
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(__NACL__)  
     quit(0);
-#endif
+#endif    
     return 0;
 }
 

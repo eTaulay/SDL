@@ -22,6 +22,7 @@
 
 #if SDL_VIDEO_DRIVER_X11
 
+#include "SDL_hints.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_keyboard_c.h"
@@ -38,9 +39,8 @@
 #include "SDL_x11opengles.h"
 #endif
 
-
-#define SDL_ENABLE_SYSWM_X11
-#include <SDL3/SDL_syswm.h>
+#include "SDL_timer.h"
+#include "SDL_syswm.h"
 
 #define _NET_WM_STATE_REMOVE    0l
 #define _NET_WM_STATE_ADD       1l
@@ -102,8 +102,10 @@ X11_IsActionAllowed(SDL_Window *window, Atom action)
     Atom *list;
     SDL_bool ret = SDL_FALSE;
 
-    if (X11_XGetWindowProperty(display, data->xwindow, _NET_WM_ALLOWED_ACTIONS, 0, 1024, False, XA_ATOM, &type, &form, &len, &remain, (unsigned char **)&list) == Success) {
-        for (i=0; i<len; ++i) {
+    if (X11_XGetWindowProperty(display, data->xwindow, _NET_WM_ALLOWED_ACTIONS, 0, 1024, False, XA_ATOM, &type, &form, &len, &remain, (unsigned char **)&list) == Success)
+    {
+        for (i=0; i<len; ++i)
+        {
             if (list[i] == action) {
                 ret = SDL_TRUE;
                 break;
@@ -263,7 +265,7 @@ SetupWindowData(_THIS, SDL_Window * window, Window w, BOOL created)
 
     /* Allocate the window data */
     data = (SDL_WindowData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         return SDL_OutOfMemory();
     }
     data->window = window;
@@ -290,7 +292,7 @@ SetupWindowData(_THIS, SDL_Window * window, Window w, BOOL created)
             (SDL_WindowData **) SDL_realloc(windowlist,
                                             (numwindows +
                                              1) * sizeof(*windowlist));
-        if (windowlist == NULL) {
+        if (!windowlist) {
             SDL_free(data);
             return SDL_OutOfMemory();
         }
@@ -324,7 +326,8 @@ SetupWindowData(_THIS, SDL_Window * window, Window w, BOOL created)
         Window FocalWindow;
         int RevertTo=0;
         X11_XGetInputFocus(data->videodata->display, &FocalWindow, &RevertTo);
-        if (FocalWindow==w) {
+        if (FocalWindow==w)
+        {
             window->flags |= SDL_WINDOW_INPUT_FOCUS;
         }
 
@@ -402,7 +405,8 @@ X11_CreateWindow(_THIS, SDL_Window * window)
 #if SDL_VIDEO_OPENGL_GLX || SDL_VIDEO_OPENGL_EGL
     const char *forced_visual_id = SDL_GetHint(SDL_HINT_VIDEO_X11_WINDOW_VISUALID);
 
-    if (forced_visual_id != NULL && forced_visual_id[0] != '\0') {
+    if (forced_visual_id != NULL && forced_visual_id[0] != '\0')
+    {
         XVisualInfo *vi, template;
         int nvis;
 
@@ -413,16 +417,19 @@ X11_CreateWindow(_THIS, SDL_Window * window)
             visual = vi->visual;
             depth = vi->depth;
             X11_XFree(vi);
-        } else {
+        }
+        else
+        {
             return -1;
         }
-    } else if ((window->flags & SDL_WINDOW_OPENGL) &&
+    }
+    else if ((window->flags & SDL_WINDOW_OPENGL) &&
         !SDL_getenv("SDL_VIDEO_X11_VISUALID")) {
         XVisualInfo *vinfo = NULL;
 
 #if SDL_VIDEO_OPENGL_EGL
         if (((_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) ||
-             SDL_GetHintBoolean(SDL_HINT_VIDEO_FORCE_EGL, SDL_FALSE))
+             SDL_GetHintBoolean(SDL_HINT_VIDEO_X11_FORCE_EGL, SDL_FALSE))
 #if SDL_VIDEO_OPENGL_GLX            
             && ( !_this->gl_data || X11_GL_UseEGL(_this) )
 #endif
@@ -436,7 +443,7 @@ X11_CreateWindow(_THIS, SDL_Window * window)
 #endif
         }
 
-        if (vinfo == NULL) {
+        if (!vinfo) {
             return -1;
         }
         visual = vinfo->visual;
@@ -473,7 +480,7 @@ X11_CreateWindow(_THIS, SDL_Window * window)
 
         /* OK, we got a colormap, now fill it in as best as we can */
         colorcells = SDL_malloc(visual->map_entries * sizeof(XColor));
-        if (colorcells == NULL) {
+        if (!colorcells) {
             return SDL_OutOfMemory();
         }
         ncolors = visual->map_entries;
@@ -644,7 +651,7 @@ X11_CreateWindow(_THIS, SDL_Window * window)
 #if SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2 || SDL_VIDEO_OPENGL_EGL
     if ((window->flags & SDL_WINDOW_OPENGL) && 
         ((_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) ||
-         SDL_GetHintBoolean(SDL_HINT_VIDEO_FORCE_EGL, SDL_FALSE))
+         SDL_GetHintBoolean(SDL_HINT_VIDEO_X11_FORCE_EGL, SDL_FALSE))
 #if SDL_VIDEO_OPENGL_GLX            
         && ( !_this->gl_data || X11_GL_UseEGL(_this) )
 #endif  
@@ -1024,7 +1031,7 @@ X11_SetWindowOpacity(_THIS, SDL_Window * window, float opacity)
 
     if (opacity == 1.0f) {
         X11_XDeleteProperty(display, data->xwindow, _NET_WM_WINDOW_OPACITY);
-    } else {
+    } else  {
         const Uint32 FullyOpaque = 0xFFFFFFFF;
         const long alpha = (long) ((double)opacity * (double)FullyOpaque);
         X11_XChangeProperty(display, data->xwindow, _NET_WM_WINDOW_OPACITY, XA_CARDINAL, 32,
@@ -1173,9 +1180,8 @@ X11_ShowWindow(_THIS, SDL_Window * window)
         /* Blocking wait for "MapNotify" event.
          * We use X11_XIfEvent because pXWindowEvent takes a mask rather than a type,
          * and XCheckTypedWindowEvent doesn't block */
-        if (!(window->flags & SDL_WINDOW_FOREIGN)) {
+        if(!(window->flags & SDL_WINDOW_FOREIGN))
             X11_XIfEvent(display, &event, &isMapNotify, (XPointer)&data->xwindow);
-        }
         X11_XFlush(display);
     }
 
@@ -1198,9 +1204,8 @@ X11_HideWindow(_THIS, SDL_Window * window)
     if (X11_IsWindowMapped(_this, window)) {
         X11_XWithdrawWindow(display, data->xwindow, displaydata->screen);
         /* Blocking wait for "UnmapNotify" event */
-        if (!(window->flags & SDL_WINDOW_FOREIGN)) {
+        if(!(window->flags & SDL_WINDOW_FOREIGN))
             X11_XIfEvent(display, &event, &isUnmapNotify, (XPointer)&data->xwindow);
-        }
         X11_XFlush(display);
     }
 }
@@ -1471,6 +1476,73 @@ X11_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * _display,
     X11_SetWindowFullscreenViaWM(_this, window, _display, fullscreen);
 }
 
+int
+X11_SetWindowGammaRamp(_THIS, SDL_Window * window, const Uint16 * ramp)
+{
+    SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
+    Display *display = data->videodata->display;
+    Visual *visual = data->visual;
+    Colormap colormap = data->colormap;
+    XColor *colorcells;
+    int ncolors;
+    int rmask, gmask, bmask;
+    int rshift, gshift, bshift;
+    int i;
+
+    if (visual->class != DirectColor) {
+        return SDL_SetError("Window doesn't have DirectColor visual");
+    }
+
+    ncolors = visual->map_entries;
+    colorcells = SDL_malloc(ncolors * sizeof(XColor));
+    if (!colorcells) {
+        return SDL_OutOfMemory();
+    }
+
+    rshift = 0;
+    rmask = visual->red_mask;
+    while (0 == (rmask & 1)) {
+        rshift++;
+        rmask >>= 1;
+    }
+
+    gshift = 0;
+    gmask = visual->green_mask;
+    while (0 == (gmask & 1)) {
+        gshift++;
+        gmask >>= 1;
+    }
+
+    bshift = 0;
+    bmask = visual->blue_mask;
+    while (0 == (bmask & 1)) {
+        bshift++;
+        bmask >>= 1;
+    }
+
+    /* build the color table pixel values */
+    for (i = 0; i < ncolors; i++) {
+        Uint32 rbits = (rmask * i) / (ncolors - 1);
+        Uint32 gbits = (gmask * i) / (ncolors - 1);
+        Uint32 bbits = (bmask * i) / (ncolors - 1);
+        Uint32 pix = (rbits << rshift) | (gbits << gshift) | (bbits << bshift);
+
+        colorcells[i].pixel = pix;
+
+        colorcells[i].red = ramp[(0 * 256) + i];
+        colorcells[i].green = ramp[(1 * 256) + i];
+        colorcells[i].blue = ramp[(2 * 256) + i];
+
+        colorcells[i].flags = DoRed | DoGreen | DoBlue;
+    }
+
+    X11_XStoreColors(display, colormap, colorcells, ncolors);
+    X11_XFlush(display);
+    SDL_free(colorcells);
+
+    return 0;
+}
+
 typedef struct {
     unsigned char *data;
     int format, count;
@@ -1490,9 +1562,7 @@ static void X11_ReadProperty(SDL_x11Prop *p, Display *disp, Window w, Atom prop)
     int bytes_fetch = 0;
 
     do {
-        if (ret != NULL) {
-            X11_XFree(ret);
-        }
+        if (ret != NULL) X11_XFree(ret);
         X11_XGetWindowProperty(disp, w, prop, 0, bytes_fetch, False, AnyPropertyType, &type, &fmt, &count, &bytes_left, &ret);
         bytes_fetch += bytes_left;
     } while (bytes_left != 0);
@@ -1541,7 +1611,7 @@ X11_GetWindowICCProfile(_THIS, SDL_Window * window, size_t * size)
     }
 
     ret_icc_profile_data = SDL_malloc(real_nitems);
-    if (ret_icc_profile_data == NULL) {
+    if (!ret_icc_profile_data) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -1690,22 +1760,30 @@ X11_DestroyWindow(_THIS, SDL_Window * window)
     window->driverdata = NULL;
 }
 
-int
-X11_GetWindowWMInfo(_THIS, SDL_Window *window, SDL_SysWMinfo *info)
+SDL_bool
+X11_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
 {
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
-    SDL_DisplayData *displaydata = (SDL_DisplayData *) SDL_GetDisplayForWindow(window)->driverdata;
+    Display *display;
 
-    if (data == NULL) {
+    if (!data) {
         /* This sometimes happens in SDL_IBus_UpdateTextRect() while creating the window */
-        return SDL_SetError("Window not initialized");
+        SDL_SetError("Window not initialized");
+        return SDL_FALSE;
     }
 
-    info->subsystem = SDL_SYSWM_X11;
-    info->info.x11.display = data->videodata->display;
-    info->info.x11.screen = displaydata->screen;
-    info->info.x11.window = data->xwindow;
-    return 0;
+    display = data->videodata->display;
+
+    if (info->version.major == SDL_MAJOR_VERSION) {
+        info->subsystem = SDL_SYSWM_X11;
+        info->info.x11.display = display;
+        info->info.x11.window = data->xwindow;
+        return SDL_TRUE;
+    } else {
+        SDL_SetError("Application not compiled with SDL %d",
+                     SDL_MAJOR_VERSION);
+        return SDL_FALSE;
+    }
 }
 
 int
@@ -1738,7 +1816,7 @@ X11_FlashWindow(_THIS, SDL_Window * window, SDL_FlashOperation operation)
     XWMHints *wmhints;
 
     wmhints = X11_XGetWMHints(display, data->xwindow);
-    if (wmhints == NULL) {
+    if (!wmhints) {
         return SDL_SetError("Couldn't get WM hints");
     }
 

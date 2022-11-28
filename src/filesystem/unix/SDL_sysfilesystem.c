@@ -25,20 +25,26 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* System dependent filesystem routines                                */
 
+#include <errno.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <fcntl.h>
 
 #if defined(__FREEBSD__) || defined(__OPENBSD__)
 #include <sys/sysctl.h>
 #endif
 
+#include "SDL_error.h"
+#include "SDL_stdinc.h"
+#include "SDL_filesystem.h"
+#include "SDL_rwops.h"
 
+/* QNX's /proc/self/exefile is a text file and not a symlink. */
+#if !defined(__QNXNTO__)
 static char *
 readSymLink(const char *path)
 {
@@ -46,7 +52,8 @@ readSymLink(const char *path)
     ssize_t len = 64;
     ssize_t rc = -1;
 
-    while (1) {
+    while (1)
+    {
         char *ptr = (char *) SDL_realloc(retval, (size_t) len);
         if (ptr == NULL) {
             SDL_OutOfMemory();
@@ -69,6 +76,8 @@ readSymLink(const char *path)
     SDL_free(retval);
     return NULL;
 }
+#endif
+
 
 #if defined(__OPENBSD__)
 static char *search_path_for_binary(const char *bin)
@@ -79,13 +88,13 @@ static char *search_path_for_binary(const char *bin)
     char *start = envr;
     char *ptr;
 
-    if (envr == NULL) {
+    if (!envr) {
         SDL_SetError("No $PATH set");
         return NULL;
     }
 
     envr = SDL_strdup(envr);
-    if (envr == NULL) {
+    if (!envr) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -134,7 +143,7 @@ SDL_GetBasePath(void)
     const int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
     if (sysctl(mib, SDL_arraysize(mib), fullpath, &buflen, NULL, 0) != -1) {
         retval = SDL_strdup(fullpath);
-        if (retval == NULL) {
+        if (!retval) {
             SDL_OutOfMemory();
             return NULL;
         }
@@ -148,13 +157,13 @@ SDL_GetBasePath(void)
     if (sysctl(mib, 4, NULL, &len, NULL, 0) != -1) {
         char *exe, *pwddst;
         char *realpathbuf = (char *) SDL_malloc(PATH_MAX + 1);
-        if (realpathbuf == NULL) {
+        if (!realpathbuf) {
             SDL_OutOfMemory();
             return NULL;
         }
 
         cmdline = SDL_malloc(len);
-        if (cmdline == NULL) {
+        if (!cmdline) {
             SDL_free(realpathbuf);
             SDL_OutOfMemory();
             return NULL;
@@ -192,16 +201,26 @@ SDL_GetBasePath(void)
             }
         }
 
-        if (retval == NULL) {
+        if (!retval) {
             SDL_free(realpathbuf);
         }
 
         SDL_free(cmdline);
     }
 #endif
+#if defined(__SOLARIS__)
+    const char *path = getexecname();
+    if ((path != NULL) && (path[0] == '/')) { /* must be absolute path... */
+        retval = SDL_strdup(path);
+        if (!retval) {
+            SDL_OutOfMemory();
+            return NULL;
+        }
+    }
+#endif
 
     /* is a Linux-style /proc filesystem available? */
-    if (retval == NULL && (access("/proc", F_OK) == 0)) {
+    if (!retval && (access("/proc", F_OK) == 0)) {
         /* !!! FIXME: after 2.0.6 ships, let's delete this code and just
                       use the /proc/%llu version. There's no reason to have
                       two copies of this plus all the #ifdefs. --ryan. */
@@ -209,8 +228,8 @@ SDL_GetBasePath(void)
         retval = readSymLink("/proc/curproc/file");
 #elif defined(__NETBSD__)
         retval = readSymLink("/proc/curproc/exe");
-#elif defined(__SOLARIS__)
-        retval = readSymLink("/proc/self/path/a.out");
+#elif defined(__QNXNTO__)
+        retval = SDL_LoadFile("/proc/self/exefile", NULL);
 #else
         retval = readSymLink("/proc/self/exe");  /* linux. */
         if (retval == NULL) {
@@ -225,18 +244,7 @@ SDL_GetBasePath(void)
         }
 #endif
     }
-#if defined(__SOLARIS__)
-    else {
-        const char *path = getexecname();
-        if ((path != NULL) && (path[0] == '/')) { /* must be absolute path... */
-            retval = SDL_strdup(path);
-            if (retval == NULL) {
-                SDL_OutOfMemory();
-                return NULL;
-            }
-        }
-    }
-#endif
+
     /* If we had access to argv[0] here, we could check it for a path,
         or troll through $PATH looking for it, too. */
 
@@ -253,9 +261,8 @@ SDL_GetBasePath(void)
     if (retval != NULL) {
         /* try to shrink buffer... */
         char *ptr = (char *) SDL_realloc(retval, SDL_strlen(retval) + 1);
-        if (ptr != NULL) {
-            retval = ptr; /* oh well if it failed. */
-        }
+        if (ptr != NULL)
+            retval = ptr;  /* oh well if it failed. */
     }
 
     return retval;
@@ -277,18 +284,18 @@ SDL_GetPrefPath(const char *org, const char *app)
     char *ptr = NULL;
     size_t len = 0;
 
-    if (app == NULL) {
+    if (!app) {
         SDL_InvalidParamError("app");
         return NULL;
     }
-    if (org == NULL) {
+    if (!org) {
         org = "";
     }
 
-    if (envr == NULL) {
+    if (!envr) {
         /* You end up with "$HOME/.local/share/Game Name 2" */
         envr = SDL_getenv("HOME");
-        if (envr == NULL) {
+        if (!envr) {
             /* we could take heroic measures with /etc/passwd, but oh well. */
             SDL_SetError("neither XDG_DATA_HOME nor HOME environment is set");
             return NULL;
@@ -299,13 +306,12 @@ SDL_GetPrefPath(const char *org, const char *app)
     }
 
     len = SDL_strlen(envr);
-    if (envr[len - 1] == '/') {
+    if (envr[len - 1] == '/')
         append += 1;
-    }
 
     len += SDL_strlen(append) + SDL_strlen(org) + SDL_strlen(app) + 3;
     retval = (char *) SDL_malloc(len);
-    if (retval == NULL) {
+    if (!retval) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -319,9 +325,8 @@ SDL_GetPrefPath(const char *org, const char *app)
     for (ptr = retval+1; *ptr; ptr++) {
         if (*ptr == '/') {
             *ptr = '\0';
-            if (mkdir(retval, 0700) != 0 && errno != EEXIST) {
+            if (mkdir(retval, 0700) != 0 && errno != EEXIST)
                 goto error;
-            }
             *ptr = '/';
         }
     }

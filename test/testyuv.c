@@ -9,8 +9,12 @@
   including commercial applications, and to alter it and redistribute it
   freely.
 */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_test_font.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "SDL.h"
+#include "SDL_test_font.h"
 #include "testyuv_cvt.h"
 
 
@@ -21,7 +25,9 @@
 /* Return true if the YUV format is packed pixels */
 static SDL_bool is_packed_yuv_format(Uint32 format)
 {
-    return format == SDL_PIXELFORMAT_YUY2 || format == SDL_PIXELFORMAT_UYVY || format == SDL_PIXELFORMAT_YVYU;
+    return (format == SDL_PIXELFORMAT_YUY2 ||
+            format == SDL_PIXELFORMAT_UYVY ||
+            format == SDL_PIXELFORMAT_YVYU);
 }
 
 /* Create a surface with a good pattern for verifying YUV conversion */
@@ -73,7 +79,7 @@ static SDL_bool verify_yuv_data(Uint32 format, const Uint8 *yuv, int yuv_pitch, 
     SDL_bool result = SDL_FALSE;
 
     rgb = (Uint8 *)SDL_malloc(size);
-    if (rgb == NULL) {
+    if (!rgb) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Out of memory");
         return SDL_FALSE;
     }
@@ -124,7 +130,7 @@ static int run_automated_tests(int pattern_size, int extra_pitch)
     int yuv1_pitch, yuv2_pitch;
     int result = -1;
     
-    if (pattern == NULL || yuv1 == NULL || yuv2 == NULL) {
+    if (!pattern || !yuv1 || !yuv2) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't allocate test surfaces");
         goto done;
     }
@@ -326,7 +332,7 @@ main(int argc, char **argv)
         filename = "testyuv.bmp";
     }
     original = SDL_ConvertSurfaceFormat(SDL_LoadBMP(filename), SDL_PIXELFORMAT_RGB24, 0);
-    if (original == NULL) {
+    if (!original) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't load %s: %s\n", filename, SDL_GetError());
         return 3;
     }
@@ -338,7 +344,7 @@ main(int argc, char **argv)
     pitch = CalculateYUVPitch(yuv_format, original->w);
 
     converted = SDL_CreateRGBSurfaceWithFormat(0, original->w, original->h, 0, rgb_format);
-    if (converted == NULL) {
+    if (!converted) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create converted surface: %s\n", SDL_GetError());
         return 3;
     }
@@ -355,13 +361,13 @@ main(int argc, char **argv)
                               SDL_WINDOWPOS_UNDEFINED,
                               original->w, original->h,
                               0);
-    if (window == NULL) {
+    if (!window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window: %s\n", SDL_GetError());
         return 4;
     }
 
     renderer = SDL_CreateRenderer(window, -1, 0);
-    if (renderer == NULL) {
+    if (!renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create renderer: %s\n", SDL_GetError());
         return 4;
     }
@@ -396,7 +402,8 @@ main(int argc, char **argv)
     }
 
     { int done = 0;
-        while ( !done ) {
+        while ( !done )
+        {
             SDL_Event event;
             while (SDL_PollEvent(&event) > 0) {
                 if (event.type == SDL_QUIT) {

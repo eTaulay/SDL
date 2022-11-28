@@ -22,8 +22,10 @@
 
 /* Window event handling code for SDL */
 
+#include "SDL_events.h"
 #include "SDL_events_c.h"
 #include "SDL_mouse_c.h"
+#include "SDL_hints.h"
 
 typedef struct RemovePendingSizeChangedAndResizedEvents_Data
 {
@@ -86,7 +88,7 @@ SDL_SendWindowEvent(SDL_Window * window, Uint8 windowevent, int data1,
 {
     int posted;
 
-    if (window == NULL) {
+    if (!window) {
         return 0;
     }
     switch (windowevent) {

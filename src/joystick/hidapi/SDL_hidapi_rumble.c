@@ -24,6 +24,8 @@
 
 /* Handle rumble on a separate thread so it doesn't block the application */
 
+#include "SDL_thread.h"
+#include "SDL_timer.h"
 #include "SDL_hidapijoystick_c.h"
 #include "SDL_hidapi_rumble.h"
 #include "../../thread/SDL_systhread.h"
@@ -213,7 +215,7 @@ int SDL_HIDAPI_SendRumbleWithCallbackAndUnlock(SDL_HIDAPI_Device *device, const 
     }
 
     request = (SDL_HIDAPI_RumbleRequest *)SDL_calloc(1, sizeof(*request));
-    if (request == NULL) {
+    if (!request) {
         SDL_HIDAPI_UnlockRumble();
         return SDL_OutOfMemory();
     }

@@ -24,6 +24,7 @@
 
 /* Android SDL video driver implementation */
 
+#include "SDL_video.h"
 #include "../SDL_egl_c.h"
 #include "SDL_androidwindow.h"
 

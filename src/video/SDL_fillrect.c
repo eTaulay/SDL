@@ -20,7 +20,9 @@
 */
 #include "../SDL_internal.h"
 
+#include "SDL_video.h"
 #include "SDL_blit.h"
+#include "SDL_cpuinfo.h"
 
 
 #ifdef __SSE__
@@ -235,12 +237,12 @@ SDL_FillRect4(Uint8 * pixels, int pitch, Uint32 color, int w, int h)
 int
 SDL_FillRect(SDL_Surface * dst, const SDL_Rect * rect, Uint32 color)
 {
-    if (dst == NULL) {
+    if (!dst) {
         return SDL_InvalidParamError("SDL_FillRect(): dst");
     }
 
     /* If 'rect' == NULL, then fill the whole surface */
-    if (rect == NULL) {
+    if (!rect) {
         rect = &dst->clip_rect;
         /* Don't attempt to fill if the surface's clip_rect is empty */
         if (SDL_RectEmpty(rect)) {
@@ -303,7 +305,7 @@ SDL_FillRects(SDL_Surface * dst, const SDL_Rect * rects, int count,
     void (*fill_function)(Uint8 * pixels, int pitch, Uint32 color, int w, int h) = NULL;
     int i;
 
-    if (dst == NULL) {
+    if (!dst) {
         return SDL_InvalidParamError("SDL_FillRects(): dst");
     }
 
@@ -317,7 +319,7 @@ SDL_FillRects(SDL_Surface * dst, const SDL_Rect * rects, int count,
         return SDL_SetError("SDL_FillRects(): You must lock the surface");
     }
 
-    if (rects == NULL) {
+    if (!rects) {
         return SDL_InvalidParamError("SDL_FillRects(): rects");
     }
 

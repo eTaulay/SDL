@@ -158,12 +158,14 @@ extern void Cocoa_SetWindowBordered(_THIS, SDL_Window * window, SDL_bool bordere
 extern void Cocoa_SetWindowResizable(_THIS, SDL_Window * window, SDL_bool resizable);
 extern void Cocoa_SetWindowAlwaysOnTop(_THIS, SDL_Window * window, SDL_bool on_top);
 extern void Cocoa_SetWindowFullscreen(_THIS, SDL_Window * window, SDL_VideoDisplay * display, SDL_bool fullscreen);
+extern int Cocoa_SetWindowGammaRamp(_THIS, SDL_Window * window, const Uint16 * ramp);
 extern void* Cocoa_GetWindowICCProfile(_THIS, SDL_Window * window, size_t * size);
 extern int Cocoa_GetWindowDisplayIndex(_THIS, SDL_Window * window);
+extern int Cocoa_GetWindowGammaRamp(_THIS, SDL_Window * window, Uint16 * ramp);
 extern void Cocoa_SetWindowMouseRect(_THIS, SDL_Window * window);
 extern void Cocoa_SetWindowMouseGrab(_THIS, SDL_Window * window, SDL_bool grabbed);
 extern void Cocoa_DestroyWindow(_THIS, SDL_Window * window);
-extern int Cocoa_GetWindowWMInfo(_THIS, SDL_Window *window, struct SDL_SysWMinfo *info);
+extern SDL_bool Cocoa_GetWindowWMInfo(_THIS, SDL_Window * window, struct SDL_SysWMinfo *info);
 extern int Cocoa_SetWindowHitTest(SDL_Window *window, SDL_bool enabled);
 extern void Cocoa_AcceptDragAndDrop(SDL_Window * window, SDL_bool accept);
 extern int Cocoa_FlashWindow(_THIS, SDL_Window * window, SDL_FlashOperation operation);

@@ -24,6 +24,9 @@
 
 /* Allow access to a raw mixing buffer */
 
+#include "SDL_timer.h"
+#include "SDL_loadso.h"
+#include "SDL_audio.h"
 #include "../SDL_audio_c.h"
 #include "SDL_directsound.h"
 #include <mmreg.h>
@@ -293,7 +296,7 @@ DSOUND_GetDeviceBuf(_THIS)
     }
     if (result != DS_OK) {
         SetDSerror("DirectSound GetCurrentPosition", result);
-        return NULL;
+        return (NULL);
     }
     cursor /= this->spec.size;
 #ifdef DEBUG_SOUND
@@ -328,9 +331,9 @@ DSOUND_GetDeviceBuf(_THIS)
     }
     if (result != DS_OK) {
         SetDSerror("DirectSound Lock", result);
-        return NULL;
+        return (NULL);
     }
-    return this->hidden->locked_buf;
+    return (this->hidden->locked_buf);
 }
 
 static int

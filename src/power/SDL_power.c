@@ -19,6 +19,7 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 #include "../SDL_internal.h"
+#include "SDL_power.h"
 #include "SDL_syspower.h"
 
 /*
@@ -55,7 +56,7 @@ static SDL_GetPowerInfo_Impl implementations[] = {
 #ifdef SDL_POWER_UIKIT          /* handles iPhone/iPad/etc */
     SDL_GetPowerInfo_UIKit,
 #endif
-#ifdef SDL_POWER_MACOSX         /* handles macOS, Darwin. */
+#ifdef SDL_POWER_MACOSX         /* handles Mac OS X, Darwin. */
     SDL_GetPowerInfo_MacOSX,
 #endif
 #ifdef SDL_POWER_HAIKU          /* with BeOS euc.jp apm driver. Does this work on Haiku? */

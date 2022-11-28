@@ -31,6 +31,7 @@
 extern "C" {
 #endif
 
+#include "SDL_video.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -58,24 +59,29 @@ NGAGE_DeleteDevice(SDL_VideoDevice * device)
 {
     SDL_VideoData *phdata = (SDL_VideoData*)device->driverdata;
 
-    if (phdata) {
+    if (phdata)
+    {
         /* Free Epoc resources */
 
         /* Disable events for me */
-        if (phdata->NGAGE_WsEventStatus != KRequestPending) {
+        if (phdata->NGAGE_WsEventStatus != KRequestPending)
+        {
             phdata->NGAGE_WsSession.EventReadyCancel();
         }
-        if (phdata->NGAGE_RedrawEventStatus != KRequestPending) {
+        if (phdata->NGAGE_RedrawEventStatus != KRequestPending)
+        {
             phdata->NGAGE_WsSession.RedrawReadyCancel();
         }
 
         free(phdata->NGAGE_DrawDevice);
 
-        if (phdata->NGAGE_WsWindow.WsHandle()) {
+        if (phdata->NGAGE_WsWindow.WsHandle())
+        {
             phdata->NGAGE_WsWindow.Close();
         }
 
-        if (phdata->NGAGE_WsWindowGroup.WsHandle()) {
+        if (phdata->NGAGE_WsWindowGroup.WsHandle())
+        {
             phdata->NGAGE_WsWindowGroup.Close();
         }
 
@@ -85,7 +91,8 @@ NGAGE_DeleteDevice(SDL_VideoDevice * device)
         delete phdata->NGAGE_WsScreen;
         phdata->NGAGE_WsScreen = NULL;
 
-        if (phdata->NGAGE_WsSession.WsHandle()) {
+        if (phdata->NGAGE_WsSession.WsHandle())
+        {
             phdata->NGAGE_WsSession.Close();
         }
 
@@ -93,7 +100,8 @@ NGAGE_DeleteDevice(SDL_VideoDevice * device)
         phdata = NULL;
     }
 
-    if (device) {
+    if (device)
+    {
         SDL_free(device);
         device = NULL;
     }
@@ -107,17 +115,18 @@ NGAGE_CreateDevice(void)
 
     /* Initialize all variables that we clean on shutdown */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
-    if (device == NULL) {
+    if (!device) {
         SDL_OutOfMemory();
-        return 0;
+        return (0);
     }
 
     /* Initialize internal N-Gage specific data */
     phdata = (SDL_VideoData *) SDL_calloc(1, sizeof(SDL_VideoData));
-    if (phdata == NULL) {
+    if (! phdata)
+    {
         SDL_OutOfMemory();
         SDL_free(device);
-        return 0;
+        return (0);
     }
 
     /* General video */

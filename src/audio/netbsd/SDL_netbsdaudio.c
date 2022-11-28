@@ -36,6 +36,8 @@
 #include <sys/types.h>
 #include <sys/audioio.h>
 
+#include "SDL_timer.h"
+#include "SDL_audio.h"
 #include "../../core/unix/SDL_poll.h"
 #include "../SDL_audio_c.h"
 #include "../SDL_audiodev_c.h"
@@ -144,7 +146,7 @@ NETBSDAUDIO_PlayDevice(_THIS)
 static Uint8 *
 NETBSDAUDIO_GetDeviceBuf(_THIS)
 {
-    return this->hidden->mixbuf;
+    return (this->hidden->mixbuf);
 }
 
 

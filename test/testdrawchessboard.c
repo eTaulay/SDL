@@ -14,11 +14,14 @@
 
 /* Sample program:  Draw a Chess Board  by using SDL_CreateSoftwareRenderer API */
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 
 SDL_Window *window;
 SDL_Renderer *renderer;
@@ -34,11 +37,11 @@ DrawChessBoard()
     /* Get the Size of drawing surface */
     SDL_RenderGetViewport(renderer, &darea);
 
-    for ( ; row < 8; row++)
+    for( ; row < 8; row++)
     {
         column = row%2;
         x = column;
-        for ( ; column < 4+(row%2); column++)
+        for( ; column < 4+(row%2); column++)
         {
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xFF);
 
@@ -101,7 +104,8 @@ main(int argc, char *argv[])
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
 
     /* Initialize SDL */
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if(SDL_Init(SDL_INIT_VIDEO) != 0)
+    {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init fail : %s\n", SDL_GetError());
         return 1;
     }
@@ -109,13 +113,15 @@ main(int argc, char *argv[])
 
     /* Create window and renderer for given surface */
     window = SDL_CreateWindow("Chess Board", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_RESIZABLE);
-    if (window == NULL) {
+    if(!window)
+    {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Window creation fail : %s\n",SDL_GetError());
         return 1;
     }
     surface = SDL_GetWindowSurface(window);
     renderer = SDL_CreateSoftwareRenderer(surface);
-    if (renderer == NULL) {
+    if(!renderer)
+    {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Render creation for surface fail : %s\n",SDL_GetError());
         return 1;
     }
@@ -139,4 +145,3 @@ main(int argc, char *argv[])
     return 0;
 }
 
-/* vi: set ts=4 sw=4 expandtab: */

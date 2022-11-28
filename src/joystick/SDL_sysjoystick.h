@@ -24,6 +24,7 @@
 #define SDL_sysjoystick_h_
 
 /* This is the system specific header for the SDL joystick API */
+#include "SDL_joystick.h"
 #include "SDL_joystick_c.h"
 
 /* Set up for C function definitions, even when using C++ */
@@ -238,6 +239,7 @@ extern SDL_JoystickDriver SDL_VIRTUAL_JoystickDriver;
 extern SDL_JoystickDriver SDL_WGI_JoystickDriver;
 extern SDL_JoystickDriver SDL_WINDOWS_JoystickDriver;
 extern SDL_JoystickDriver SDL_WINMM_JoystickDriver;
+extern SDL_JoystickDriver SDL_OS2_JoystickDriver;
 extern SDL_JoystickDriver SDL_PS2_JoystickDriver;
 extern SDL_JoystickDriver SDL_PSP_JoystickDriver;
 extern SDL_JoystickDriver SDL_VITA_JoystickDriver;

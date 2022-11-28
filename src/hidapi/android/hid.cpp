@@ -50,6 +50,7 @@
 
 #if !SDL_HIDAPI_DISABLED
 
+#include "SDL_hints.h"
 #include "../../core/android/SDL_android.h"
 
 #define hid_init                        PLATFORM_hid_init

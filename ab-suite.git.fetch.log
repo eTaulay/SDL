@@ -1,0 +1,11 @@
+CPPFLAGS: -D_FORTIFY_SOURCE=0 -D__USE_MINGW_ANSI_STDIO=1
+CFLAGS: -mthreads -mtune=generic -O2 -pipe
+CXXFLAGS: -mthreads -mtune=generic -O2 -pipe
+LDFLAGS: -pipe -static-libgcc -static-libstdc++
+vcs_fetch 
+++ git rev-parse --git-dir
++ [[ -f .git/shallow ]]
++ unshallow=
++ git fetch --all -Ppft
++ git remote set-head -a origin
+origin/HEAD set to main

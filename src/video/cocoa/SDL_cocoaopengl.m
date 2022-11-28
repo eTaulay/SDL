@@ -31,7 +31,9 @@
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/CGLRenderers.h>
 
-#include <SDL3/SDL_opengl.h>
+#include "SDL_hints.h"
+#include "SDL_loadso.h"
+#include "SDL_opengl.h"
 #include "../../SDL_hints_c.h"
 
 #define DEFAULT_OPENGL  "/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib"

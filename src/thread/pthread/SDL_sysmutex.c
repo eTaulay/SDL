@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "SDL_thread.h"
 
 #if !SDL_THREAD_PTHREAD_RECURSIVE_MUTEX && \
     !SDL_THREAD_PTHREAD_RECURSIVE_MUTEX_NP
@@ -63,7 +64,7 @@ SDL_CreateMutex(void)
     } else {
         SDL_OutOfMemory();
     }
-    return mutex;
+    return (mutex);
 }
 
 void

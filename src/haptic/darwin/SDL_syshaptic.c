@@ -22,7 +22,10 @@
 
 #ifdef SDL_HAPTIC_IOKIT
 
+#include "SDL_stdinc.h"
+#include "SDL_haptic.h"
 #include "../SDL_syshaptic.h"
+#include "SDL_joystick.h"
 #include "../../joystick/SDL_sysjoystick.h"     /* For the real SDL_Joystick */
 #include "../../joystick/darwin/SDL_iokitjoystick_c.h"    /* For joystick hwdata */
 #include "SDL_syshaptic_c.h"
@@ -226,7 +229,8 @@ MacHaptic_MaybeAddDevice( io_object_t device )
     }
 
     /* Make sure we don't already have it */
-    for (item = SDL_hapticlist; item ; item = item->next) {
+    for (item = SDL_hapticlist; item ; item = item->next)
+    {
         if (IOObjectIsEqualTo((io_object_t) item->dev, device)) {
             /* Already added */
             return -1;
@@ -351,7 +355,7 @@ HIDGetDeviceProduct(io_service_t dev, char *name)
         return SDL_SetError("Haptic: Unable to create CFProperties.");
     }
 
-    /* macOS currently is not mirroring all USB properties to HID page so need to look at USB device page also
+    /* Mac OS X currently is not mirroring all USB properties to HID page so need to look at USB device page also
      * get dictionary for USB properties: step up two levels and get CF dictionary for USB properties
      */
     if ((KERN_SUCCESS ==
@@ -1341,7 +1345,7 @@ SDL_SYS_HapticSetGain(SDL_Haptic * haptic, int gain)
     HRESULT ret;
     Uint32 val;
 
-    val = gain * 100;           /* macOS uses 0 to 10,000 */
+    val = gain * 100;           /* Mac OS X uses 0 to 10,000 */
     ret = FFDeviceSetForceFeedbackProperty(haptic->hwdata->device,
                                            FFPROP_FFGAIN, &val);
     if (ret != FF_OK) {
@@ -1361,7 +1365,7 @@ SDL_SYS_HapticSetAutocenter(SDL_Haptic * haptic, int autocenter)
     HRESULT ret;
     Uint32 val;
 
-    /* macOS only has 0 (off) and 1 (on) */
+    /* Mac OS X only has 0 (off) and 1 (on) */
     if (autocenter == 0) {
         val = 0;
     } else {

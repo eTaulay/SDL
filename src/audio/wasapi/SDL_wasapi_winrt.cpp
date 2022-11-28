@@ -36,6 +36,8 @@
 
 extern "C" {
 #include "../../core/windows/SDL_windows.h"
+#include "SDL_audio.h"
+#include "SDL_timer.h"
 #include "../SDL_audio_c.h"
 #include "../SDL_sysaudio.h"
 }
@@ -387,7 +389,8 @@ WASAPI_RemoveDevice(const SDL_bool iscapture, LPCWSTR devid)
         if (SDL_wcscmp(i->str, devid) == 0) {
             if (prev) {
                 prev->next = next;
-            } else {
+            }
+            else {
                 deviceid_list = next;
             }
             SDL_RemoveAudioDevice(iscapture, i->str);
@@ -418,7 +421,7 @@ WASAPI_AddDevice(const SDL_bool iscapture, const char *devname, WAVEFORMATEXTENS
     }
 
     devidlist = (DevIdList *)SDL_malloc(sizeof(*devidlist));
-    if (devidlist == NULL) {
+    if (!devidlist) {
         return;  /* oh well. */
     }
 

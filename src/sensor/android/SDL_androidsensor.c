@@ -20,11 +20,15 @@
 */
 #include "../../SDL_internal.h"
 
+#include "SDL_config.h"
+
 #ifdef SDL_SENSOR_ANDROID
 
 /* This is the system specific header for the SDL sensor API */
 #include <android/sensor.h>
 
+#include "SDL_error.h"
+#include "SDL_sensor.h"
 #include "SDL_androidsensor.h"
 #include "../SDL_syssensor.h"
 #include "../SDL_sensor_c.h"
@@ -52,14 +56,14 @@ SDL_ANDROID_SensorInit(void)
     ASensorList sensors;
 
     SDL_sensor_manager = ASensorManager_getInstance();
-    if (SDL_sensor_manager == NULL) {
+    if (!SDL_sensor_manager) {
         return SDL_SetError("Couldn't create sensor manager");
     }
 
     SDL_sensor_looper = ALooper_forThread();
-    if (SDL_sensor_looper == NULL) {
+    if (!SDL_sensor_looper) {
         SDL_sensor_looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
-        if (SDL_sensor_looper == NULL) {
+        if (!SDL_sensor_looper) {
             return SDL_SetError("Couldn't create sensor event loop");
         }
     }
@@ -68,7 +72,7 @@ SDL_ANDROID_SensorInit(void)
     sensors_count = ASensorManager_getSensorList(SDL_sensor_manager, &sensors);
     if (sensors_count > 0) {
         SDL_sensors = (SDL_AndroidSensor *)SDL_calloc(sensors_count, sizeof(*SDL_sensors));
-        if (SDL_sensors == NULL) {
+        if (!SDL_sensors) {
             return SDL_OutOfMemory();
         }
 

@@ -12,15 +12,19 @@
 
 /* Simple program to test the SDL joystick routines */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include <SDL3/SDL.h>
+#include "SDL.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
-#ifdef __IOS__
+#ifndef SDL_JOYSTICK_DISABLED
+
+#ifdef __IPHONEOS__
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   480
 #else
@@ -114,7 +118,7 @@ loop(void *arg)
 
         case SDL_JOYDEVICEADDED:
             SDL_Log("Joystick device %d added.\n", (int) event.jdevice.which);
-            if (joystick == NULL) {
+            if (!joystick) {
                 joystick = SDL_JoystickOpen(event.jdevice.which);
                 if (joystick) {
                     PrintJoystick(joystick);
@@ -140,21 +144,16 @@ loop(void *arg)
         case SDL_JOYHATMOTION:
             SDL_Log("Joystick %" SDL_PRIs32 " hat %d value:",
                     event.jhat.which, event.jhat.hat);
-            if (event.jhat.value == SDL_HAT_CENTERED) {
+            if (event.jhat.value == SDL_HAT_CENTERED)
                 SDL_Log(" centered");
-            }
-            if (event.jhat.value & SDL_HAT_UP) {
+            if (event.jhat.value & SDL_HAT_UP)
                 SDL_Log(" up");
-            }
-            if (event.jhat.value & SDL_HAT_RIGHT) {
+            if (event.jhat.value & SDL_HAT_RIGHT)
                 SDL_Log(" right");
-            }
-            if (event.jhat.value & SDL_HAT_DOWN) {
+            if (event.jhat.value & SDL_HAT_DOWN)
                 SDL_Log(" down");
-            }
-            if (event.jhat.value & SDL_HAT_LEFT) {
+            if (event.jhat.value & SDL_HAT_LEFT)
                 SDL_Log(" left");
-            }
             SDL_Log("\n");
             break;
         case SDL_JOYBALLMOTION:
@@ -326,5 +325,16 @@ main(int argc, char *argv[])
 
     return 0;
 }
+
+#else
+
+int
+main(int argc, char *argv[])
+{
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL compiled without Joystick support.\n");
+    return 1;
+}
+
+#endif
 
 /* vi: set ts=4 sw=4 expandtab: */

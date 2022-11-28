@@ -22,6 +22,9 @@
 
 #ifdef SDL_TIMER_PSP
 
+#include "SDL_thread.h"
+#include "SDL_timer.h"
+#include "SDL_error.h"
 #include "../SDL_timer_c.h"
 #include <stdlib.h>
 #include <time.h>
@@ -76,9 +79,8 @@ SDL_GetPerformanceFrequency(void)
 void SDL_Delay(Uint32 ms)
 {
     const Uint32 max_delay = 0xffffffffUL / 1000;
-    if (ms > max_delay) {
+    if(ms > max_delay)
         ms = max_delay;
-    }
     sceKernelDelayThreadCB(ms * 1000);
 }
 

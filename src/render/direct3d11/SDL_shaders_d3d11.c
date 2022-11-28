@@ -22,6 +22,7 @@
 
 #if SDL_VIDEO_RENDER_D3D11 && !SDL_RENDER_DISABLED
 
+#include "SDL_stdinc.h"
 
 #define COBJMACROS
 #include "../../core/windows/SDL_windows.h"

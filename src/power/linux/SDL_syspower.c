@@ -31,6 +31,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+#include "SDL_power.h"
 #include "../SDL_syspower.h"
 
 #include "../../core/linux/SDL_dbus.h"
@@ -302,13 +303,11 @@ next_string(char **_ptr, char **_str)
     }
 
     str = ptr;
-    while ((*ptr != ' ') && (*ptr != '\n') && (*ptr != '\0')) {
+    while ((*ptr != ' ') && (*ptr != '\n') && (*ptr != '\0'))
         ptr++;
-    }
 
-    if (*ptr != '\0') {
+    if (*ptr != '\0')
         *(ptr++) = '\0';
-    }
 
     *_str = str;
     *_ptr = ptr;
@@ -320,7 +319,7 @@ int_string(char *str, int *val)
 {
     char *endptr = NULL;
     *val = (int) SDL_strtol(str, &endptr, 0);
-    return (*str != '\0') && (*endptr == '\0');
+    return ((*str != '\0') && (*endptr == '\0'));
 }
 
 /* http://lxr.linux.no/linux+v2.6.29/drivers/char/apm-emulation.c */
@@ -440,7 +439,7 @@ SDL_GetPowerInfo_Linux_sys_class_power_supply(SDL_PowerState *state, int *second
     DIR *dirp;
 
     dirp = opendir(base);
-    if (dirp == NULL) {
+    if (!dirp) {
         return SDL_FALSE;
     }
 
@@ -634,9 +633,9 @@ SDL_GetPowerInfo_Linux_org_freedesktop_upower(SDL_PowerState *state, int *second
     char **paths = NULL;
     int i, numpaths = 0;
 
-    if (dbus == NULL || !SDL_DBus_CallMethodOnConnection(dbus->system_conn, UPOWER_DBUS_NODE, UPOWER_DBUS_PATH, UPOWER_DBUS_INTERFACE, "EnumerateDevices",
-                                                         DBUS_TYPE_INVALID,
-                                                         DBUS_TYPE_ARRAY, DBUS_TYPE_OBJECT_PATH, &paths, &numpaths, DBUS_TYPE_INVALID)) {
+    if (!dbus || !SDL_DBus_CallMethodOnConnection(dbus->system_conn, UPOWER_DBUS_NODE, UPOWER_DBUS_PATH, UPOWER_DBUS_INTERFACE, "EnumerateDevices",
+            DBUS_TYPE_INVALID,
+            DBUS_TYPE_ARRAY, DBUS_TYPE_OBJECT_PATH, &paths, &numpaths, DBUS_TYPE_INVALID)) {
         return SDL_FALSE;  /* try a different approach than UPower. */
     }
 

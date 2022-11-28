@@ -37,6 +37,8 @@
  *  SDL video driver.  Renamed to "DUMMY" by Sam Lantinga.
  */
 
+#include "SDL_video.h"
+#include "SDL_mouse.h"
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -44,6 +46,7 @@
 #include "SDL_nullvideo.h"
 #include "SDL_nullevents_c.h"
 #include "SDL_nullframebuffer_c.h"
+#include "SDL_hints.h"
 
 #define DUMMYVID_DRIVER_NAME "dummy"
 #define DUMMYVID_DRIVER_EVDEV_NAME "evdev"
@@ -90,14 +93,14 @@ DUMMY_CreateDevice(void)
     SDL_VideoDevice *device;
 
     if (!DUMMY_Available()) {
-        return 0;
+        return (0);
     }
 
     /* Initialize all variables that we clean on shutdown */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
-    if (device == NULL) {
+    if (!device) {
         SDL_OutOfMemory();
-        return 0;
+        return (0);
     }
     device->is_dummy = SDL_TRUE;
 

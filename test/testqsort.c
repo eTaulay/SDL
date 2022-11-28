@@ -10,7 +10,7 @@
   freely.
 */
 
-#include <SDL3/SDL_test.h>
+#include "SDL_test.h"
 
 static int SDLCALL
 num_compare(const void *_a, const void *_b)
@@ -49,7 +49,8 @@ main(int argc, char *argv[])
     int iteration;
     SDLTest_RandomContext rndctx;
 
-    if (argc > 1) {
+    if (argc > 1)
+    {
         int success;
         Uint64 seed = 0;
         if (argv[1][0] == '0' && argv[1][1] == 'x')
@@ -65,7 +66,9 @@ main(int argc, char *argv[])
             return 1;
         }
         SDLTest_RandomInit(&rndctx, (unsigned int)(seed >> 32), (unsigned int)(seed & 0xffffffff));
-    } else {
+    }
+    else
+    {
         SDLTest_RandomInitTime(&rndctx);
     }
     SDL_Log("Using random seed 0x%08x%08x\n", rndctx.x, rndctx.c);
@@ -100,3 +103,4 @@ main(int argc, char *argv[])
 }
 
 /* vi: set ts=4 sw=4 expandtab: */
+

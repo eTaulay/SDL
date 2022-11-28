@@ -21,13 +21,14 @@
 #include "../../SDL_internal.h"
 
 #if SDL_VIDEO_RENDER_OGL && !SDL_RENDER_DISABLED
+#include "SDL_hints.h"
 #include "../../video/SDL_sysvideo.h" /* For SDL_GL_SwapWindowWithResult */
-#include <SDL3/SDL_opengl.h>
+#include "SDL_opengl.h"
 #include "../SDL_sysrender.h"
 #include "SDL_shaders_gl.h"
 #include "../../SDL_utils_c.h"
 
-#ifdef __MACOS__
+#ifdef __MACOSX__
 #include <OpenGL/OpenGL.h>
 #endif
 
@@ -45,7 +46,7 @@
 
 /* OpenGL renderer implementation */
 
-/* Details on optimizing the texture path on macOS:
+/* Details on optimizing the texture path on Mac OS X:
    http://developer.apple.com/library/mac/#documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_texturedata/opengl_texturedata.html
 */
 
@@ -172,7 +173,8 @@ GL_ClearErrors(SDL_Renderer *renderer)
 {
     GL_RenderData *data = (GL_RenderData *) renderer->driverdata;
 
-    if (!data->debug_enabled) {
+    if (!data->debug_enabled)
+    {
         return;
     }
     if (data->GL_ARB_debug_output_supported) {
@@ -199,7 +201,8 @@ GL_CheckAllErrors (const char *prefix, SDL_Renderer *renderer, const char *file,
     GL_RenderData *data = (GL_RenderData *) renderer->driverdata;
     int ret = 0;
 
-    if (!data->debug_enabled) {
+    if (!data->debug_enabled)
+    {
         return 0;
     }
     if (data->GL_ARB_debug_output_supported) {
@@ -310,7 +313,7 @@ GL_GetFBO(GL_RenderData *data, Uint32 w, Uint32 h)
         result = result->next;
     }
 
-    if (result == NULL) {
+    if (!result) {
         result = SDL_malloc(sizeof(GL_FBOList));
         if (result) {
             result->w = w;
@@ -435,7 +438,7 @@ convert_format(GL_RenderData *renderdata, Uint32 pixel_format,
         *format = GL_LUMINANCE;
         *type = GL_UNSIGNED_BYTE;
         break;
-#ifdef __MACOS__
+#ifdef __MACOSX__
     case SDL_PIXELFORMAT_UYVY:
         *internalFormat = GL_RGB8;
         *format = GL_YCBCR_422_APPLE;
@@ -475,7 +478,7 @@ GL_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
     }
 
     data = (GL_TextureData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         return SDL_OutOfMemory();
     }
 
@@ -550,7 +553,7 @@ GL_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         renderdata->glTexParameteri(textype, GL_TEXTURE_WRAP_T,
                                     GL_CLAMP_TO_EDGE);
     }
-#ifdef __MACOS__
+#ifdef __MACOSX__
 #ifndef GL_TEXTURE_STORAGE_HINT_APPLE
 #define GL_TEXTURE_STORAGE_HINT_APPLE       0x85BC
 #endif
@@ -577,7 +580,8 @@ GL_CreateTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         renderdata->glTexImage2D(textype, 0, internalFormat, texture_w,
                                  texture_h, 0, format, type, data->pixels);
         renderdata->glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_FALSE);
-    } else
+    }
+    else
 #endif
     {
         renderdata->glTexImage2D(textype, 0, internalFormat, texture_w,
@@ -934,7 +938,7 @@ GL_QueueDrawPoints(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_FP
     GLfloat *verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, count * 2 * sizeof (GLfloat), 0, &cmd->data.draw.first);
     int i;
 
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
 
@@ -955,7 +959,7 @@ GL_QueueDrawLines(SDL_Renderer * renderer, SDL_RenderCommand *cmd, const SDL_FPo
     const size_t vertlen = (sizeof (GLfloat) * 2) * count;
     GLfloat *verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, vertlen, 0, &cmd->data.draw.first);
 
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
     cmd->data.draw.count = count;
@@ -1001,7 +1005,7 @@ GL_QueueGeometry(SDL_Renderer *renderer, SDL_RenderCommand *cmd, SDL_Texture *te
     size_t sz = 2 * sizeof(GLfloat) + 4 * sizeof(Uint8) + (texture ? 2 : 0) * sizeof(GLfloat);
 
     verts = (GLfloat *) SDL_AllocateRenderVertices(renderer, count * sz, 0, &cmd->data.draw.first);
-    if (verts == NULL) {
+    if (!verts) {
         return -1;
     }
 
@@ -1217,7 +1221,7 @@ GL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *vertic
         }
     }
 
-#ifdef __MACOS__
+#ifdef __MACOSX__
     // On macOS on older systems, the OpenGL view change and resize events aren't
     // necessarily synchronized, so just always reset it.
     // Workaround for: https://discourse.libsdl.org/t/sdl-2-0-22-prerelease/35306/6
@@ -1455,7 +1459,7 @@ GL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
 
     temp_pitch = rect->w * SDL_BYTESPERPIXEL(temp_format);
     temp_pixels = SDL_malloc(rect->h * temp_pitch);
-    if (temp_pixels == NULL) {
+    if (!temp_pixels) {
         return SDL_OutOfMemory();
     }
 
@@ -1522,7 +1526,7 @@ GL_DestroyTexture(SDL_Renderer * renderer, SDL_Texture * texture)
         renderdata->drawstate.target = NULL;
     }
 
-    if (data == NULL) {
+    if (!data) {
         return;
     }
     if (data->texture) {
@@ -1756,13 +1760,13 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
 #endif
 
     renderer = (SDL_Renderer *) SDL_calloc(1, sizeof(*renderer));
-    if (renderer == NULL) {
+    if (!renderer) {
         SDL_OutOfMemory();
         goto error;
     }
 
     data = (GL_RenderData *) SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         SDL_free(renderer);
         SDL_OutOfMemory();
         goto error;
@@ -1823,7 +1827,7 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
         renderer->info.flags |= SDL_RENDERER_ACCELERATED;
     }
 
-#ifdef __MACOS__
+#ifdef __MACOSX__
     /* Enable multi-threaded rendering */
     /* Disabled until Ryan finishes his VBO/PBO code...
        CGLEnable(CGLGetCurrentContext(), kCGLCEMPEngine);
@@ -1857,7 +1861,7 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
     }
 
     hint = SDL_getenv("GL_ARB_texture_non_power_of_two");
-    if (hint == NULL || *hint != '0') {
+    if (!hint || *hint != '0') {
         SDL_bool isGL2 = SDL_FALSE;
         const char *verstr = (const char *)data->glGetString(GL_VERSION);
         if (verstr) {
@@ -1924,7 +1928,7 @@ GL_CreateRenderer(SDL_Window * window, Uint32 flags)
         renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_NV21;
     }
 #endif
-#ifdef __MACOS__
+#ifdef __MACOSX__
     renderer->info.texture_formats[renderer->info.num_texture_formats++] = SDL_PIXELFORMAT_UYVY;
 #endif
 

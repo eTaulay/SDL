@@ -1,14 +1,17 @@
 /*
     SDL_ps2_main.c, fjtrujy@gmail.com 
 */
-#include <SDL3/SDL.h>
+
+#include "SDL_config.h"
 
 #ifdef __PS2__
+
+#include "SDL_main.h"
+#include "SDL_error.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <stdio.h>
 
 #include <kernel.h>
 #include <sifrpc.h>
@@ -25,9 +28,9 @@
 __attribute__((weak))
 void reset_IOP() {
     SifInitRpc(0);
-    while (!SifIopReset(NULL, 0)) {
+    while(!SifIopReset(NULL, 0)) {
     }
-    while (!SifIopSync()) {
+    while(!SifIopSync()){
     }
 }
 
@@ -56,7 +59,7 @@ static void waitUntilDeviceIsReady(char *path)
     int ret = -1;
     int retries = 50;
 
-    while (ret != 0 && retries > 0) {
+    while(ret != 0 && retries > 0) {
         ret = stat(path, &buffer);
         /* Wait until the device is ready */
         nopdelay();

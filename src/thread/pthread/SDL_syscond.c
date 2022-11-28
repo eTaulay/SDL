@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "SDL_thread.h"
 #include "SDL_sysmutex_c.h"
 
 struct SDL_cond
@@ -47,7 +48,7 @@ SDL_CreateCond(void)
             cond = NULL;
         }
     }
-    return cond;
+    return (cond);
 }
 
 /* Destroy a condition variable */
@@ -66,7 +67,7 @@ SDL_CondSignal(SDL_cond * cond)
 {
     int retval;
 
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     }
 
@@ -83,7 +84,7 @@ SDL_CondBroadcast(SDL_cond * cond)
 {
     int retval;
 
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     }
 
@@ -103,7 +104,7 @@ SDL_CondWaitTimeout(SDL_cond * cond, SDL_mutex * mutex, Uint32 ms)
 #endif
     struct timespec abstime;
 
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     }
 
@@ -146,7 +147,7 @@ SDL_CondWaitTimeout(SDL_cond * cond, SDL_mutex * mutex, Uint32 ms)
 int
 SDL_CondWait(SDL_cond * cond, SDL_mutex * mutex)
 {
-    if (cond == NULL) {
+    if (!cond) {
         return SDL_InvalidParamError("cond");
     } else if (pthread_cond_wait(&cond->cond, &mutex->id) != 0) {
         return SDL_SetError("pthread_cond_wait() failed");

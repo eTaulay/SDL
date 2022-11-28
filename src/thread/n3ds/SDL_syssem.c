@@ -26,6 +26,7 @@
 
 #include <3ds.h>
 
+#include "SDL_thread.h"
 
 struct SDL_semaphore
 {
@@ -43,7 +44,7 @@ SDL_CreateSemaphore(Uint32 initial_value)
     }
 
     sem = (SDL_sem *) SDL_malloc(sizeof(*sem));
-    if (sem == NULL) {
+    if (!sem) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -67,8 +68,8 @@ SDL_DestroySemaphore(SDL_sem *sem)
 int
 SDL_SemTryWait(SDL_sem *sem)
 {
-    if (sem == NULL) {
-        return SDL_InvalidParamError("sem");
+    if (!sem) {
+        return SDL_SetError("Passed a NULL semaphore");
     }
 
     return SDL_SemWaitTimeout(sem, 0);
@@ -79,8 +80,8 @@ SDL_SemWaitTimeout(SDL_sem *sem, Uint32 timeout)
 {
     int retval;
 
-    if (sem == NULL) {
-        return SDL_InvalidParamError("sem");
+    if (!sem) {
+        return SDL_SetError("Passed a NULL semaphore");
     }
 
     if (timeout == SDL_MUTEX_MAXWAIT) {
@@ -112,8 +113,8 @@ SDL_SemWait(SDL_sem *sem)
 Uint32
 SDL_SemValue(SDL_sem *sem)
 {
-    if (sem == NULL) {
-        return SDL_InvalidParamError("sem");
+    if (!sem) {
+        return SDL_SetError("Passed a NULL semaphore");
     }
     return sem->semaphore.current_count;
 }
@@ -121,8 +122,8 @@ SDL_SemValue(SDL_sem *sem)
 int
 SDL_SemPost(SDL_sem *sem)
 {
-    if (sem == NULL) {
-        return SDL_InvalidParamError("sem");
+    if (!sem) {
+        return SDL_SetError("Passed a NULL semaphore");
     }
     LightSemaphore_Release(&sem->semaphore, 1);
     return 0;

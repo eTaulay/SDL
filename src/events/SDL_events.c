@@ -22,6 +22,9 @@
 
 /* General event handling code for SDL */
 
+#include "SDL.h"
+#include "SDL_events.h"
+#include "SDL_thread.h"
 #include "SDL_events_c.h"
 #include "../SDL_hints_c.h"
 #include "../timer/SDL_timer_c.h"
@@ -29,7 +32,7 @@
 #include "../joystick/SDL_joystick_c.h"
 #endif
 #include "../video/SDL_sysvideo.h"
-#include <SDL3/SDL_syswm.h>
+#include "SDL_syswm.h"
 
 #undef SDL_PRIs64
 #if (defined(__WIN32__) || defined(__GDK__)) && !defined(__CYGWIN__)
@@ -553,7 +556,7 @@ SDL_StartEventLoop(void)
     }
     SDL_LockMutex(SDL_EventQ.lock);
 
-    if (SDL_event_watchers_lock == NULL) {
+    if (!SDL_event_watchers_lock) {
         SDL_event_watchers_lock = SDL_CreateMutex();
         if (SDL_event_watchers_lock == NULL) {
             SDL_UnlockMutex(SDL_EventQ.lock);
@@ -594,7 +597,7 @@ SDL_AddEvent(SDL_Event * event)
 
     if (SDL_EventQ.free == NULL) {
         entry = (SDL_EventEntry *)SDL_malloc(sizeof(*entry));
-        if (entry == NULL) {
+        if (!entry) {
             return 0;
         }
     } else {
@@ -669,7 +672,7 @@ static int
 SDL_SendWakeupEvent()
 {
     SDL_VideoDevice *_this = SDL_GetVideoDevice();
-    if (_this == NULL || !_this->SendWakeupEvent) {
+    if (!_this || !_this->SendWakeupEvent) {
         return 0;
     }
     if (!_this->wakeup_lock || SDL_LockMutex(_this->wakeup_lock) == 0) {
@@ -705,7 +708,7 @@ SDL_PeepEventsInternal(SDL_Event * events, int numevents, SDL_eventaction action
             if (action == SDL_GETEVENT) {
                 SDL_SetError("The event system has been shut down");
             }
-            return -1;
+            return (-1);
         }
         if (action == SDL_ADDEVENT) {
             for (i = 0; i < numevents; ++i) {
@@ -728,7 +731,7 @@ SDL_PeepEventsInternal(SDL_Event * events, int numevents, SDL_eventaction action
                 SDL_EventQ.wmmsg_used = NULL;
             }
 
-            for (entry = SDL_EventQ.head; entry && (events == NULL || used < numevents); entry = next) {
+            for (entry = SDL_EventQ.head; entry && (!events || used < numevents); entry = next) {
                 next = entry->next;
                 type = entry->event.type;
                 if (minType <= type && type <= maxType) {
@@ -761,7 +764,7 @@ SDL_PeepEventsInternal(SDL_Event * events, int numevents, SDL_eventaction action
                             /* Skip it, we don't want to include it */
                             continue;
                         }
-                        if (events == NULL || action != SDL_GETEVENT) {
+                        if (!events || action != SDL_GETEVENT) {
                             ++sentinels_expected;
                         }
                         if (SDL_AtomicGet(&SDL_sentinel_pending) > sentinels_expected) {
@@ -784,7 +787,7 @@ SDL_PeepEventsInternal(SDL_Event * events, int numevents, SDL_eventaction action
         SDL_SendWakeupEvent();
     }
 
-    return used;
+    return (used);
 }
 int
 SDL_PeepEvents(SDL_Event * events, int numevents, SDL_eventaction action,
@@ -796,13 +799,13 @@ SDL_PeepEvents(SDL_Event * events, int numevents, SDL_eventaction action,
 SDL_bool
 SDL_HasEvent(Uint32 type)
 {
-    return SDL_PeepEvents(NULL, 0, SDL_PEEKEVENT, type, type) > 0;
+    return (SDL_PeepEvents(NULL, 0, SDL_PEEKEVENT, type, type) > 0);
 }
 
 SDL_bool
 SDL_HasEvents(Uint32 minType, Uint32 maxType)
 {
-    return SDL_PeepEvents(NULL, 0, SDL_PEEKEVENT, minType, maxType) > 0;
+    return (SDL_PeepEvents(NULL, 0, SDL_PEEKEVENT, minType, maxType) > 0);
 }
 
 void
@@ -1125,7 +1128,7 @@ SDL_PushEvent(SDL_Event * event)
     event->common.timestamp = SDL_GetTicks();
 
     if (SDL_EventOK.callback || SDL_event_watchers_count > 0) {
-        if (SDL_event_watchers_lock == NULL || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
+        if (!SDL_event_watchers_lock || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
             if (SDL_EventOK.callback && !SDL_EventOK.callback(SDL_EventOK.userdata, event)) {
                 if (SDL_event_watchers_lock) {
                     SDL_UnlockMutex(SDL_event_watchers_lock);
@@ -1176,7 +1179,7 @@ SDL_PushEvent(SDL_Event * event)
 void
 SDL_SetEventFilter(SDL_EventFilter filter, void *userdata)
 {
-    if (SDL_event_watchers_lock == NULL || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
+    if (!SDL_event_watchers_lock || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
         /* Set filter and discard pending events */
         SDL_EventOK.callback = filter;
         SDL_EventOK.userdata = userdata;
@@ -1193,7 +1196,7 @@ SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 {
     SDL_EventWatcher event_ok;
 
-    if (SDL_event_watchers_lock == NULL || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
+    if (!SDL_event_watchers_lock || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
         event_ok = SDL_EventOK;
 
         if (SDL_event_watchers_lock) {
@@ -1215,7 +1218,7 @@ SDL_GetEventFilter(SDL_EventFilter * filter, void **userdata)
 void
 SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
 {
-    if (SDL_event_watchers_lock == NULL || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
+    if (!SDL_event_watchers_lock || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
         SDL_EventWatcher *event_watchers;
 
         event_watchers = SDL_realloc(SDL_event_watchers, (SDL_event_watchers_count + 1) * sizeof(*event_watchers));
@@ -1239,7 +1242,7 @@ SDL_AddEventWatch(SDL_EventFilter filter, void *userdata)
 void
 SDL_DelEventWatch(SDL_EventFilter filter, void *userdata)
 {
-    if (SDL_event_watchers_lock == NULL || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
+    if (!SDL_event_watchers_lock || SDL_LockMutex(SDL_event_watchers_lock) == 0) {
         int i;
 
         for (i = 0; i < SDL_event_watchers_count; ++i) {
@@ -1352,7 +1355,7 @@ SDL_SendAppEvent(SDL_EventType eventType)
         event.type = eventType;
         posted = (SDL_PushEvent(&event) > 0);
     }
-    return posted;
+    return (posted);
 }
 
 int
@@ -1369,7 +1372,7 @@ SDL_SendSysWMEvent(SDL_SysWMmsg * message)
         posted = (SDL_PushEvent(&event) > 0);
     }
     /* Update internal event state */
-    return posted;
+    return (posted);
 }
 
 int
